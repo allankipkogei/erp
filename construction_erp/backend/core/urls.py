@@ -2,12 +2,12 @@ from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from accounts.tokens import EmailTokenObtainPairView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
     TokenVerifyView,
 )
+from accounts.tokens import CustomTokenObtainPairView
 from accounts.views import CustomTokenObtainPairView
 
 from rest_framework import permissions
@@ -17,6 +17,9 @@ from drf_spectacular.views import (
     SpectacularRedocView,
     )
 from .views import get_current_user
+from accounts.views import UserProfileView
+from accounts.views import CustomTokenObtainPairView
+from . import views
 
 
 # Import viewsets from each module
@@ -124,15 +127,16 @@ urlpatterns = [
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
     path("api/accounts/", include("accounts.urls")),
-    path("api/token/", EmailTokenObtainPairView.as_view(), name="token_obtain_pair"),
     
     # API schema + docs
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/swagger/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("api/docs/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
     
-    path("users/me/", get_current_user, name="current-user"),
+    path('api/users/me/', UserProfileView.as_view(), name='user_profile'),
     path("api/", include("accounts.urls")),
+    path('api/accounts/', include('accounts.urls')),
+    path('api/users/me/', views.get_current_user, name='current-user'),
 
 
 ]

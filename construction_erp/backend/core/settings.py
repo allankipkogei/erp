@@ -196,6 +196,6 @@ AUTHENTICATION_BACKENDS = [
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
 AUTHENTICATION_BACKENDS = [
-    "accounts.backends.EmailBackend",             # custom (username or email)
-    "django.contrib.auth.backends.ModelBackend",  # default (fallback)
+    'accounts.auth_backend.EmailOrUsernameModelBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]

@@ -93,9 +93,28 @@ def get_current_user(request):
     serializer = UserSerializer(request.user)
     return Response(serializer.data)    
 
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+    
 class CurrentUserView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         serializer = UserSerializer(request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data)
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_current_user(request):
+    try:
+        user = request.user
+        serializer = UserSerializer(user)  # Make sure you have this serializer
+        return Response(serializer.data)
+    except Exception as e:
+        print(f"Error in get_current_user: {e}")
+        return Response({"error": str(e)}, status=500)    

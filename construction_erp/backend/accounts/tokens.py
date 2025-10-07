@@ -1,30 +1,29 @@
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
-from .models import CustomUser
+from rest_framework_simplejwt.tokens import RefreshToken
 
-class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
-    username_field = CustomUser.EMAIL_FIELD  # tells JWT to use "email"
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        # Add custom claims
+        token['username'] = user.username
+        token['email'] = user.email
+        # Add any other custom claims you need
+
+        return token
 
     def validate(self, attrs):
-        # Rename "email" field to "username" internally for Django auth
-        credentials = {
-            'email': attrs.get("email"),
-            'password': attrs.get("password")
-        }
-        user = CustomUser.objects.filter(email=credentials["email"]).first()
-        if user is None or not user.check_password(credentials["password"]):
-            raise serializers.ValidationError("Invalid email or password")
-
         data = super().validate(attrs)
-        data['user'] = {
-            "id": self.user.id,
-            "username": self.user.username,
-            "email": self.user.email,
-            "role": self.user.role,
-        }
+        
+        # Add extra responses here
+        data['username'] = self.user.username
+        data['email'] = self.user.email
+        data['user_id'] = self.user.id
+        
         return data
 
-
-class EmailTokenObtainPairView(TokenObtainPairView):
-    serializer_class = EmailTokenObtainPairSerializer
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer

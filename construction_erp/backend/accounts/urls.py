@@ -12,4 +12,5 @@ urlpatterns = [
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("user/", UserDetailView.as_view(), name="user_detail"),  # ✅
     path("users/me/", CurrentUserView.as_view(), name="current-user"),
+    path('me/', CurrentUserView.as_view(), name='user_profile'),
 ]

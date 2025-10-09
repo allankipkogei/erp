@@ -1,64 +1,42 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
 
-const AuthContext = createContext();
-
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
-};
+export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [accessToken, setAccessToken] = useState(null);
-    const [refreshToken, setRefreshToken] = useState(null);
-    const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        // Load from localStorage when app starts
-        const authData = localStorage.getItem("auth");
-        if (authData) {
-            const parsed = JSON.parse(authData);
-            setUser(parsed.user);
-            setAccessToken(parsed.accessToken);
-            setRefreshToken(parsed.refreshToken);
-        }
-        setLoading(false);
-    }, []);
+  useEffect(() => {
+    const accessToken = localStorage.getItem("access");
+    const storedUser = localStorage.getItem("user");
+    if (accessToken && storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+    setLoading(false);
+  }, []);
 
-    const login = (userData, accessToken, refreshToken) => {
-        setUser(userData);
-        setAccessToken(accessToken);
-        setRefreshToken(refreshToken);
+  const login = (userData, tokens) => {
+    localStorage.setItem("access", tokens.access);
+    localStorage.setItem("refresh", tokens.refresh);
+    localStorage.setItem("user", JSON.stringify(userData));
+    setUser(userData);
+  };
 
-        // Save to localStorage
-        localStorage.setItem(
-            "auth",
-            JSON.stringify({ user: userData, accessToken, refreshToken })
-        );
-    };
+  const logout = () => {
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    localStorage.removeItem("user");
+    setUser(null);
+  };
 
-    const logout = () => {
-        setUser(null);
-        setAccessToken(null);
-        setRefreshToken(null);
-        localStorage.removeItem("auth");
-    };
+  return (
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
 
-    const value = {
-        user,
-        accessToken,
-        refreshToken,
-        login,
-        logout,
-        loading,
-    };
-
-    return (
-        <AuthContext.Provider value={value}>
-            {children}
-        </AuthContext.Provider>
-    );
+// ✅ This hook is missing in your code — add it!
+export const useAuth = () => {
+  return useContext(AuthContext);
 };

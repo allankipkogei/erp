@@ -188,14 +188,9 @@ SPECTACULAR_SETTINGS = {
 
 AUTH_USER_MODEL = "accounts.CustomUser"
 
-AUTHENTICATION_BACKENDS = [
-    'accounts.backends.EmailBackend',  # Custom backend for email login
-    'django.contrib.auth.backends.ModelBackend',  # Default backend
-]
-
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
 AUTHENTICATION_BACKENDS = [
-    'accounts.auth_backend.EmailOrUsernameModelBackend',
-    'django.contrib.auth.backends.ModelBackend',
+    'accounts.auth_backend.EmailOrUsernameBackend',  # ✅ correct class name
+    'django.contrib.auth.backends.ModelBackend',     # keep the default
 ]

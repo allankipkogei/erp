@@ -11,28 +11,22 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-const handleLogin = async (e) => {
+  const handleLogin = async (e) => {
   e.preventDefault();
-  console.log("Logging in with:", { email, password });
   setError("");
 
   try {
     // 1️⃣ Obtain JWT tokens
-    const payload = {
-      email: email, // Use 'email' if USERNAME_FIELD = 'email', or 'username' if USERNAME_FIELD = 'username'
-      password: password
-    };
-    console.log("Sending payload:", payload);
+    const payload = { email, password };
     const tokenRes = await axios.post("http://127.0.0.1:8000/api/token/", payload, {
-      headers: { "Content-Type": "application/json" }
+      headers: { "Content-Type": "application/json" },
     });
 
     const { access, refresh } = tokenRes.data;
 
     // 2️⃣ Fetch user profile
-    console.log("Access Token:", access);
     const profileRes = await axios.get("http://127.0.0.1:8000/api/users/me/", {
-      headers: { Authorization: `Bearer ${access}` }
+      headers: { Authorization: `Bearer ${access}` },
     });
 
     const user = profileRes.data;
@@ -40,28 +34,25 @@ const handleLogin = async (e) => {
     // 3️⃣ Save user + tokens in context/localStorage
     login(user, access, refresh);
 
-    // Optional: set default axios Authorization header
-    axios.defaults.headers.common['Authorization'] = `Bearer ${access}`;
-
     // 4️⃣ Redirect based on role
-    switch (user.role) {
-      case "admin":
-        navigate("/admin-dashboard");
-        break;
-      case "manager":
-        navigate("/manager-dashboard");
-        break;
-      case "worker":
-        navigate("/worker-dashboard");
-        break;
-      default:
-        navigate("/dashboard");
+    if (user.role === "admin" || user.is_staff) {
+      navigate("/admin-dashboard");
+    } else {
+      navigate("/worker-dashboard");
     }
+
   } catch (err) {
     console.error("Login error:", err.response?.data || err.message);
-    setError(`Login failed: ${err.response?.data?.detail || err.response?.data?.non_field_errors?.[0] || "Please check your credentials."}`);
+    setError(
+      `Login failed: ${
+        err.response?.data?.detail ||
+        err.response?.data?.non_field_errors?.[0] ||
+        "Please check your credentials."
+      }`
+    );
   }
 };
+
 
   return (
     <div className="login-page">

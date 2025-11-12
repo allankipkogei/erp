@@ -1,22 +1,22 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000", // ✅ Django backend
+  baseURL: "http://127.0.0.1:8000/api/", // ✅ Added /api
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Request interceptor to add Authorization header
+// ✅ Attach access token to every request
 api.interceptors.request.use((config) => {
-  const auth = JSON.parse(localStorage.getItem("auth"));
-  if (auth?.accessToken) {
-    config.headers.Authorization = `Bearer ${auth.accessToken}`;
+  const access = localStorage.getItem("access");
+  if (access) {
+    config.headers.Authorization = `Bearer ${access}`;
   }
   return config;
 });
 
-// Response interceptor to handle expired tokens
+// ✅ Auto-refresh when token expires
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -25,34 +25,22 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
+      const refresh = localStorage.getItem("refresh");
+      if (!refresh) {
+        window.location.href = "/login";
+        return Promise.reject(error);
+      }
+
       try {
-        const auth = JSON.parse(localStorage.getItem("auth"));
-        const refreshToken = auth?.refreshToken;
+        const res = await axios.post("http://127.0.0.1:8000/api/token/refresh/", { refresh });
+        const newAccess = res.data.access;
+        localStorage.setItem("access", newAccess);
 
-        if (!refreshToken) {
-          throw new Error("No refresh token available");
-        }
-
-        // Request new access token from Django
-        const res = await axios.post("http://localhost:8000/api/token/refresh/", {
-          refresh: refreshToken,
-        });
-
-        const newAccessToken = res.data.access;
-
-        // Update stored token
-        auth.accessToken = newAccessToken;
-        localStorage.setItem("auth", JSON.stringify(auth));
-
-        // Update Authorization header and retry original request
-        api.defaults.headers.common["Authorization"] = `Bearer ${newAccessToken}`;
-        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
-
+        originalRequest.headers.Authorization = `Bearer ${newAccess}`;
         return api(originalRequest);
       } catch (refreshError) {
-        console.error("Refresh token failed:", refreshError);
-        // If refresh fails, logout the user
-        localStorage.removeItem("auth");
+        console.error("Token refresh failed:", refreshError);
+        localStorage.clear();
         window.location.href = "/login";
       }
     }
@@ -60,14 +48,5 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-// Attach token automatically
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("authToken");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 export default api;

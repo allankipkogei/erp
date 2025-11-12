@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Equipment, EquipmentAssignment, MaintenanceRecord, EquipmentUsageLog
+from .models import Equipment, EquipmentAssignment, MaintenanceRecord, EquipmentUsageLog, EquipmentMaintenance
 
 
 class EquipmentSerializer(serializers.ModelSerializer):
@@ -33,4 +33,10 @@ class EquipmentUsageLogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EquipmentUsageLog
+        fields = "__all__"
+
+
+class EquipmentMaintenanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EquipmentMaintenance
         fields = "__all__"

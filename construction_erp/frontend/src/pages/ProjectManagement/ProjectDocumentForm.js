@@ -1,103 +1,113 @@
 import React, { useState, useEffect } from "react";
 import API from "../../api/axios";
 
-const ProjectDocumentForm = ({ document, onClose }) => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [project, setProject] = useState("");
-  const [file, setFile] = useState(null);
+export default function DocumentForm() {
   const [projects, setProjects] = useState([]);
+  const [formData, setFormData] = useState({
+    project: "",
+    name: "",
+    file: null,
+  });
 
-  // Load projects for selection
+  // Fetch available projects
   useEffect(() => {
-    const fetchProjects = async () => {
-      const res = await API.get("projects/");
-      setProjects(res.data);
-    };
+    API.get("/projects/")
+      .then((res) => setProjects(res.data))
+      .catch((err) => console.error("Error fetching projects:", err));
+  }, []);
 
-    fetchProjects();
-
-    if (document) {
-      setTitle(document.title);
-      setDescription(document.description);
-      setProject(document.project);
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === "file") {
+      setFormData({ ...formData, file: files[0] });
+    } else {
+      setFormData({ ...formData, [name]: value });
     }
-  }, [document]);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("description", description);
-    formData.append("project", project);
-    if (file) formData.append("file", file);
+
+    const data = new FormData();
+    data.append("project", formData.project);
+    data.append("name", formData.name);
+    if (formData.file) data.append("file", formData.file);
 
     try {
-      if (document) {
-        await API.put(`project-documents/${document.id}/`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      } else {
-        await API.post("project-documents/", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      }
-      onClose();
-    } catch (err) {
-      console.error(err);
+      const res = await API.post("/documents/", data, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      alert("✅ Document uploaded successfully!");
+      console.log("Uploaded Document:", res.data);
+
+      // reset form
+      setFormData({ project: "", name: "", file: null });
+    } catch (error) {
+      console.error("Upload error:", error.response?.data || error);
+      alert("❌ Upload failed. Check console for details.");
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-4">
-          {document ? "Edit Document" : "Add Document"}
-        </h2>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Title"
-          className="w-full p-2 border mb-2 rounded"
-          required
-        />
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Description"
-          className="w-full p-2 border mb-2 rounded"
-          required
-        />
+    <form
+      onSubmit={handleSubmit}
+      className="max-w-md mx-auto bg-white p-6 rounded-lg shadow space-y-4"
+    >
+      <h2 className="text-xl font-semibold">Upload Project Document</h2>
+
+      {/* Project selection */}
+      <div>
+        <label className="block mb-1 font-medium">Project</label>
         <select
-          value={project}
-          onChange={(e) => setProject(e.target.value)}
-          className="w-full p-2 border mb-2 rounded"
+          name="project"
+          value={formData.project}
+          onChange={handleChange}
+          className="w-full border rounded p-2"
           required
         >
-          <option value="">Select Project</option>
+          <option value="">-- Select Project --</option>
           {projects.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
             </option>
           ))}
         </select>
+      </div>
+
+      {/* Document name */}
+      <div>
+        <label className="block mb-1 font-medium">Document Name</label>
+        <input
+          type="text"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          className="w-full border rounded p-2"
+          placeholder="Enter document name"
+          required
+        />
+      </div>
+
+      {/* File upload */}
+      <div>
+        <label className="block mb-1 font-medium">File</label>
         <input
           type="file"
-          onChange={(e) => setFile(e.target.files[0])}
-          className="w-full p-2 border mb-4 rounded"
+          name="file"
+          accept=".pdf,.doc,.docx,.jpg,.png"
+          onChange={handleChange}
+          className="w-full border rounded p-2"
+          required
         />
-        <div className="flex justify-end space-x-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded border">
-            Cancel
-          </button>
-          <button type="submit" className="px-4 py-2 rounded bg-blue-600 text-white">
-            {document ? "Update" : "Add"}
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-};
+      </div>
 
-export default ProjectDocumentForm;
+      <button
+        type="submit"
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
+      >
+        Upload Document
+      </button>
+    </form>
+  );
+}

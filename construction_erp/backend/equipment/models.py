@@ -66,3 +66,27 @@ class EquipmentUsageLog(models.Model):
 
     def __str__(self):
         return f"{self.equipment.name} used by {self.user} on {self.project.name}"
+
+
+class EquipmentMaintenance(models.Model):
+    MAINTENANCE_TYPE_CHOICES = [
+        ("preventive", "Preventive"),
+        ("corrective", "Corrective"),
+    ]
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("in_progress", "In Progress"),
+        ("completed", "Completed"),
+    ]
+    
+    equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name="maintenances")
+    maintenance_type = models.CharField(max_length=50, choices=MAINTENANCE_TYPE_CHOICES)
+    maintenance_date = models.DateField()
+    cost = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default="pending")
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.equipment.name} - {self.maintenance_type}"

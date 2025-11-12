@@ -4,26 +4,25 @@ from .models import Site, DailyLog, SiteInspection, SafetyRecord
 
 @admin.register(Site)
 class SiteAdmin(admin.ModelAdmin):
-    list_display = ("project", "location", "site_manager", "start_date", "end_date")
-    search_fields = ("project__name", "location", "site_manager__username")
+    list_display = ('location', 'project')
+    list_filter = ('project',)
+    search_fields = ('location',)
 
 
 @admin.register(DailyLog)
 class DailyLogAdmin(admin.ModelAdmin):
-    list_display = ("site", "date", "work_done")
-    list_filter = ("site", "date")
-    search_fields = ("site__project__name", "created_by__username")
+    list_display = ('site', 'date')
+    list_filter = ('date', 'site')
+    date_hierarchy = 'date'
 
 
 @admin.register(SiteInspection)
 class SiteInspectionAdmin(admin.ModelAdmin):
-    list_display = ("site", "date", "inspector", "remarks")
-    list_filter = ("site", "date")
-    search_fields = ("site__project__name", "inspector__username")
+    list_display = ('site', 'inspector', 'status')
+    list_filter = ('status',)
 
 
 @admin.register(SafetyRecord)
 class SafetyRecordAdmin(admin.ModelAdmin):
-    list_display = ("site", "date", "severity", "reported_by")
-    list_filter = ("severity", "date")
-    search_fields = ("site__project__name", "reported_by__username")
+    list_display = ('site', 'severity', 'reported_by')
+    list_filter = ('severity',)

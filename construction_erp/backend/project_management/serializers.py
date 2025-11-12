@@ -1,18 +1,26 @@
 from rest_framework import serializers
 from .models import Project, Task, Milestone, ProjectDocument, ProjectTeam
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 
+
+# ✅ Define UserSerializer first
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "email"]
+        fields = ['id', 'email', 'first_name', 'last_name', 'email']
 
 
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = "__all__"
+        extra_kwargs = {
+            'description': {'required': False},
+            'start_date': {'required': False},
+            'created_by': {'required': False},
+        }
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -36,8 +44,9 @@ class ProjectDocumentSerializer(serializers.ModelSerializer):
 
 
 class ProjectTeamSerializer(serializers.ModelSerializer):
-    member = UserSerializer(read_only=True)
+    member_name = serializers.CharField(source='member.username', read_only=True)
+    project_name = serializers.CharField(source='project.name', read_only=True)
 
     class Meta:
         model = ProjectTeam
-        fields = "__all__"
+        fields = ['id', 'project', 'project_name', 'member', 'member_name', 'role']

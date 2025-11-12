@@ -4,7 +4,7 @@ import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 
 export default function Settings() {
-  const { user, accessToken } = useAuth();
+  const { accessToken } = useAuth();
   const [formData, setFormData] = useState({
     username: "",
     email: "",

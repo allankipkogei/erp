@@ -1,57 +1,112 @@
 import React, { useState, useEffect } from "react";
 import API from "../../api/axios";
 
-const MilestoneForm = ({ milestone, onClose }) => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [project, setProject] = useState("");
-  const [dueDate, setDueDate] = useState("");
+export default function MilestoneForm() {
   const [projects, setProjects] = useState([]);
+  const [formData, setFormData] = useState({
+    project: "",
+    name: "",
+    target_date: "",
+    achieved: false,
+  });
 
+  // Fetch all projects
   useEffect(() => {
-    if (milestone) {
-      setTitle(milestone.title);
-      setDescription(milestone.description);
-      setProject(milestone.project);
-      setDueDate(milestone.due_date);
-    }
+    API.get("/projects/")
+      .then((res) => setProjects(res.data))
+      .catch((err) => console.error("Error fetching projects:", err));
+  }, []);
 
-    const fetchProjects = async () => {
-      const res = await API.get("projects/");
-      setProjects(res.data);
-    };
-
-    fetchProjects();
-  }, [milestone]);
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value,
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (milestone) {
-      await API.put(`milestones/${milestone.id}/`, { title, description, project, due_date: dueDate });
-    } else {
-      await API.post("milestones/", { title, description, project, due_date: dueDate });
+
+    try {
+      const res = await API.post("/milestones/", formData);
+      alert("✅ Milestone created successfully!");
+      console.log("Milestone created:", res.data);
+
+      // reset form
+      setFormData({ project: "", name: "", target_date: "", achieved: false });
+    } catch (error) {
+      console.error("Error creating milestone:", error.response?.data || error);
+      alert("❌ Failed to create milestone. Check console for details.");
     }
-    onClose();
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-4">{milestone ? "Edit Milestone" : "Add Milestone"}</h2>
-        <input type="text" value={title} onChange={e=>setTitle(e.target.value)} placeholder="Title" className="w-full p-2 border mb-2 rounded" required />
-        <textarea value={description} onChange={e=>setDescription(e.target.value)} placeholder="Description" className="w-full p-2 border mb-2 rounded" required />
-        <select value={project} onChange={e=>setProject(e.target.value)} className="w-full p-2 border mb-2 rounded" required>
-          <option value="">Select Project</option>
-          {projects.map(p=> <option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
-        <input type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)} className="w-full p-2 border mb-4 rounded" required />
-        <div className="flex justify-end space-x-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded border">Cancel</button>
-          <button type="submit" className="px-4 py-2 rounded bg-blue-600 text-white">{milestone ? "Update" : "Add"}</button>
-        </div>
-      </form>
-    </div>
-  );
-};
+    <form
+      onSubmit={handleSubmit}
+      className="max-w-md mx-auto bg-white p-6 rounded-lg shadow space-y-4"
+    >
+      <h2 className="text-xl font-semibold">Create Milestone</h2>
 
-export default MilestoneForm;
+      <div>
+        <label className="block mb-1 font-medium">Project</label>
+        <select
+          name="project"
+          value={formData.project}
+          onChange={handleChange}
+          className="w-full border rounded p-2"
+          required
+        >
+          <option value="">-- Select Project --</option>
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label className="block mb-1 font-medium">Milestone Name</label>
+        <input
+          type="text"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          className="w-full border rounded p-2"
+          placeholder="Enter milestone name"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block mb-1 font-medium">Target Date</label>
+        <input
+          type="date"
+          name="target_date"
+          value={formData.target_date}
+          onChange={handleChange}
+          className="w-full border rounded p-2"
+          required
+        />
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          name="achieved"
+          checked={formData.achieved}
+          onChange={handleChange}
+        />
+        <label>Achieved</label>
+      </div>
+
+      <button
+        type="submit"
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
+      >
+        Create Milestone
+      </button>
+    </form>
+  );
+}

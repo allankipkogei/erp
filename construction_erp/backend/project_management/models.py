@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.contrib.auth.models import User
 
 
 class Project(models.Model):
@@ -64,7 +65,7 @@ class Milestone(models.Model):
 class ProjectDocument(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="documents")
     name = models.CharField(max_length=200)
-    file = models.FileField(upload_to="project_documents/")
+    file = models.FileField(upload_to="documents/")
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

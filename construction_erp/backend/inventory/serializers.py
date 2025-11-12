@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Warehouse, Item, Stock, StockTransaction
+from .models import Warehouse, InventoryItem, Material, Stock, StockMovement
 
 
 class WarehouseSerializer(serializers.ModelSerializer):
@@ -8,29 +8,25 @@ class WarehouseSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class ItemSerializer(serializers.ModelSerializer):
+class InventoryItemSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Item
+        model = InventoryItem
+        fields = "__all__"
+
+
+class MaterialSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Material
         fields = "__all__"
 
 
 class StockSerializer(serializers.ModelSerializer):
-    item = ItemSerializer(read_only=True)
-    item_id = serializers.PrimaryKeyRelatedField(
-        queryset=Item.objects.all(), source="item", write_only=True
-    )
-    warehouse = WarehouseSerializer(read_only=True)
-    warehouse_id = serializers.PrimaryKeyRelatedField(
-        queryset=Warehouse.objects.all(), source="warehouse", write_only=True
-    )
-
     class Meta:
         model = Stock
-        fields = ["id", "item", "item_id", "warehouse", "warehouse_id", "quantity"]
-        read_only_fields = ["id"]
-        
+        fields = "__all__"
 
-class StockTransactionSerializer(serializers.ModelSerializer):
+
+class StockMovementSerializer(serializers.ModelSerializer):
     class Meta:
-        model = StockTransaction
+        model = StockMovement
         fields = "__all__"

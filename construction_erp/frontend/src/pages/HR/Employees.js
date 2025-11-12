@@ -1,100 +1,161 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import API from "../../api/axios";
-import EmployeeForm from "./EmployeeForm";
 
-const Employees = () => {
-  const [employees, setEmployees] = useState([]);
-  const [editingEmployee, setEditingEmployee] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const fetchEmployees = async () => {
-    setLoading(true);
-    try {
-      const res = await API.get("employees/");
-      setEmployees(res.data);
-      setError(null);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to fetch employees");
-    } finally {
-      setLoading(false);
-    }
-  };
+export default function EmployeeForm({ employee, onClose }) {
+  const [departments, setDepartments] = useState([]);
+  const [formData, setFormData] = useState({
+    name: "",
+    role: "",
+    department: "",
+    salary: "",
+    hire_date: "",
+    is_active: true,
+  });
 
   useEffect(() => {
-    fetchEmployees();
-  }, []);
+    // Load form data if editing an existing employee
+    if (employee) {
+      setFormData({
+        name: employee.name || "",
+        role: employee.role || "",
+        department: employee.department || "",
+        salary: employee.salary || "",
+        hire_date: employee.hire_date || "",
+        is_active: employee.is_active ?? true,
+      });
+    }
 
-  const handleEdit = (employee) => {
-    setEditingEmployee(employee);
-    setShowForm(true);
+    // Fetch departments if your model has a FK
+    const fetchDepartments = async () => {
+      try {
+        const res = await API.get("/departments/"); // change if you have a different endpoint
+        setDepartments(res.data);
+      } catch (err) {
+        console.error("Failed to fetch departments:", err);
+      }
+    };
+
+    fetchDepartments();
+  }, [employee]);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value,
+    });
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this employee?")) {
-      const prevEmployees = [...employees];
-      setEmployees(employees.filter((emp) => emp.id !== id));
-      try {
-        await API.delete(`employees/${id}/`);
-      } catch (err) {
-        console.error(err);
-        setEmployees(prevEmployees); // rollback on failure
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      if (employee) {
+        await API.put(`/employees/${employee.id}/`, formData);
+      } else {
+        await API.post("/employees/", formData);
       }
+      alert("✅ Employee saved successfully!");
+      onClose();
+    } catch (err) {
+      console.error("Error saving employee:", err.response?.data || err);
+      alert("❌ Failed to save employee. Check required fields.");
     }
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-4">Employees</h1>
-      <button
-        onClick={() => { setEditingEmployee(null); setShowForm(true); }}
-        className="bg-blue-600 text-white px-4 py-2 rounded mb-4 hover:bg-blue-700"
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-6 rounded-xl w-full max-w-md"
       >
-        Add Employee
-      </button>
+        <h2 className="text-xl font-semibold mb-4">
+          {employee ? "Edit Employee" : "Add Employee"}
+        </h2>
 
-      {showForm && (
-        <EmployeeForm
-          employee={editingEmployee}
-          onClose={() => { setShowForm(false); fetchEmployees(); }}
+        <label className="block mb-2">Name</label>
+        <input
+          type="text"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          required
+          className="w-full border p-2 rounded mb-3"
         />
-      )}
 
-      {loading && <p>Loading employees...</p>}
-      {error && <p className="text-red-500">{error}</p>}
+        <label className="block mb-2">Role</label>
+        <input
+          type="text"
+          name="role"
+          value={formData.role}
+          onChange={handleChange}
+          required
+          className="w-full border p-2 rounded mb-3"
+        />
 
-      {employees.length === 0 && !loading && (
-        <p className="text-gray-500">No employees found. Add one above.</p>
-      )}
+        <label className="block mb-2">Department</label>
+        <select
+          name="department"
+          value={formData.department}
+          onChange={handleChange}
+          required
+          className="w-full border p-2 rounded mb-3"
+        >
+          <option value="">Select Department</option>
+          {departments.map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.name}
+            </option>
+          ))}
+        </select>
 
-      <ul className="space-y-2">
-        {employees.map((employee) => (
-          <li
-            key={employee.id}
-            className="p-4 bg-gray-100 rounded flex justify-between items-center"
+        <label className="block mb-2">Salary</label>
+        <input
+          type="number"
+          name="salary"
+          value={formData.salary}
+          onChange={handleChange}
+          required
+          className="w-full border p-2 rounded mb-3"
+        />
+
+        <label className="block mb-2">Hire Date</label>
+        <input
+          type="date"
+          name="hire_date"
+          value={formData.hire_date}
+          onChange={handleChange}
+          required
+          className="w-full border p-2 rounded mb-3"
+        />
+
+        <div className="flex items-center mb-3">
+          <input
+            type="checkbox"
+            name="is_active"
+            checked={formData.is_active}
+            onChange={handleChange}
+            className="mr-2"
+          />
+          <label>Active Employee</label>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 border rounded hover:bg-gray-100"
           >
-            <span>{employee.name} - {employee.position}</span>
-            <div className="space-x-2">
-              <button
-                onClick={() => handleEdit(employee)}
-                className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(employee.id)}
-                className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-              >
-                Delete
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            {employee ? "Update" : "Add"}
+          </button>
+        </div>
+      </form>
     </div>
   );
-};
-
-export default Employees;
+}

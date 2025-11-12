@@ -1,23 +1,25 @@
 import React, { useEffect, useState } from "react";
-import API from "../../api/axios";
+import { fetchProjects } from "../../services/projectService";
 import ProjectForm from "./ProjectForm";
+import API from "../../api/axios";
 
 const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [editingProject, setEditingProject] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
-  const fetchProjects = async () => {
+  // ✅ Fetch all projects
+  const loadProjects = async () => {
     try {
-      const res = await API.get("projects/");
-      setProjects(res.data);
+      const data = await fetchProjects();
+      setProjects(data);
     } catch (err) {
-      console.error(err);
+      console.error("Error fetching projects:", err);
     }
   };
 
   useEffect(() => {
-    fetchProjects();
+    loadProjects();
   }, []);
 
   const handleEdit = (project) => {
@@ -29,7 +31,7 @@ const Projects = () => {
     if (window.confirm("Are you sure you want to delete this project?")) {
       try {
         await API.delete(`projects/${id}/`);
-        fetchProjects();
+        loadProjects();
       } catch (err) {
         console.error(err);
       }
@@ -40,7 +42,10 @@ const Projects = () => {
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-4">Projects</h1>
       <button
-        onClick={() => { setEditingProject(null); setShowForm(true); }}
+        onClick={() => {
+          setEditingProject(null);
+          setShowForm(true);
+        }}
         className="bg-blue-600 text-white px-4 py-2 rounded mb-4 hover:bg-blue-700"
       >
         Add Project
@@ -49,7 +54,10 @@ const Projects = () => {
       {showForm && (
         <ProjectForm
           project={editingProject}
-          onClose={() => { setShowForm(false); fetchProjects(); }}
+          onClose={() => {
+            setShowForm(false);
+            loadProjects();
+          }}
         />
       )}
 

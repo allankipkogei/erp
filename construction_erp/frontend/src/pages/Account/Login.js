@@ -31,15 +31,15 @@ const Login = () => {
 
     const user = profileRes.data;
 
-    // 3️⃣ Save user + tokens in context/localStorage
-    login(user, access, refresh);
+    login(user, { access, refresh });
 
     // 4️⃣ Redirect based on role
     if (user.role === "admin" || user.is_staff) {
-      navigate("/admin-dashboard");
+    navigate("/admin-dashboard", { replace: true });
     } else {
-      navigate("/worker-dashboard");
+    navigate("/worker-dashboard", { replace: true });
     }
+
 
   } catch (err) {
     console.error("Login error:", err.response?.data || err.message);

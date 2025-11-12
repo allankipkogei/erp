@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { fetchCurrentUser } from "../services/userService";
 
 export const AuthContext = createContext();
 
@@ -7,12 +8,27 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const accessToken = localStorage.getItem("access");
-    const storedUser = localStorage.getItem("user");
-    if (accessToken && storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    const loadUser = async () => {
+      const accessToken = localStorage.getItem("access");
+      if (!accessToken) {
+        setLoading(false);
+        return;
+      }
+
+      // Try to fetch the latest user info from backend
+      const userData = await fetchCurrentUser();
+      if (userData) {
+        setUser(userData);
+        localStorage.setItem("user", JSON.stringify(userData));
+      } else {
+        // fallback to stored user if API fails
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) setUser(JSON.parse(storedUser));
+      }
+      setLoading(false);
+    };
+
+    loadUser();
   }, []);
 
   const login = (userData, tokens) => {
@@ -36,7 +52,6 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// ✅ This hook is missing in your code — add it!
 export const useAuth = () => {
   return useContext(AuthContext);
 };

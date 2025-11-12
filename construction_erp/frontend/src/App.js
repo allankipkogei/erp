@@ -1,13 +1,16 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import Sidebar from "./components/Sidebar";
-import PrivateRoute from "./components/PrivateRoute";
+
+// Layout & Protection
+import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-// Auth
+// Auth Pages
 import Login from "./pages/Account/Login";
 import Register from "./pages/Account/Register";
 import Profile from "./pages/Account/Profile";
+import Unauthorized from "./pages/Account/Unauthorized";
 
 // Dashboards
 import AdminDashboard from "./pages/Admin/AdminDashboard";
@@ -63,16 +66,17 @@ import DailyLogs from "./pages/SiteManagement/DailyLogs";
 import SafetyRecords from "./pages/SiteManagement/SafetyRecords";
 import SiteInspections from "./pages/SiteManagement/SiteInspections";
 
-// Extra
-import Unauthorized from "./pages/Account/Unauthorized";
+// Fallback Page
+const NotFound = () => <h2 className="p-8 text-center text-xl">Page Not Found</h2>;
 
-// ✅ Wrapper for role-based dashboards
+// ✅ Role-based dashboard selector
 function RoleBasedDashboard() {
   const { user } = useAuth();
-  if (!user) return <Dashboard />;
-  if (user.role === "admin") return <AdminDashboard />;
-  if (user.role === "worker") return <WorkerDashboard />;
-  return <Dashboard />;
+  const dashboards = {
+    admin: <AdminDashboard />,
+    worker: <WorkerDashboard />,
+  };
+  return dashboards[user?.role] || <Dashboard />;
 }
 
 export default function App() {
@@ -80,88 +84,87 @@ export default function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={<Login />} />
+          {/* Public Routes */}
+          <Route
+            path="/login"
+            element={
+              localStorage.getItem("access") ? (
+                <Navigate to="/" replace />
+              ) : (
+                <Login />
+              )
+            }
+          />
           <Route path="/register" element={<Register />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
 
-          {/* Protected ERP routes */}
+          {/* Protected ERP Routes */}
           <Route
             path="/*"
             element={
-              <PrivateRoute>
-                <div className="app">
-                  <Sidebar />
-                  <main>
-                    <Routes>
-                      {/* Role-based dashboard */}
-                      <Route path="/" element={<RoleBasedDashboard />} />
+              <ProtectedRoute>
+                <Layout>
+                  <Routes>
+                    {/* Dashboard */}
+                    <Route path="/" element={<RoleBasedDashboard />} />
 
-                      {/* General */}
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="/profile" element={<Profile />} />
+                    {/* Core */}
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/profile" element={<Profile />} />
 
-                      {/* Project Management */}
-                      <Route path="/projects" element={<Projects />} />
-                      <Route path="/tasks" element={<Tasks />} />
-                      <Route path="/milestones" element={<Milestones />} />
-                      <Route path="/project-documents" element={<ProjectDocuments />} />
-                      <Route path="/project-team" element={<ProjectTeam />} />
+                    {/* Project Management */}
+                    <Route path="/projects" element={<Projects />} />
+                    <Route path="/tasks" element={<Tasks />} />
+                    <Route path="/milestones" element={<Milestones />} />
+                    <Route path="/project-documents" element={<ProjectDocuments />} />
+                    <Route path="/project-team" element={<ProjectTeam />} />
 
-                      {/* HR */}
-                      <Route path="/employees" element={<Employees />} />
-                      <Route path="/departments" element={<Departments />} />
-                      <Route path="/roles" element={<Roles />} />
-                      <Route path="/attendance" element={<Attendance />} />
-                      <Route path="/payroll" element={<Payroll />} />
-                      <Route path="/leave" element={<Leave />} />
+                    {/* HR */}
+                    <Route path="/employees" element={<Employees />} />
+                    <Route path="/departments" element={<Departments />} />
+                    <Route path="/roles" element={<Roles />} />
+                    <Route path="/attendance" element={<Attendance />} />
+                    <Route path="/payroll" element={<Payroll />} />
+                    <Route path="/leave" element={<Leave />} />
 
-                      {/* Equipment */}
-                      <Route path="/equipment-list" element={<EquipmentList />} />
-                      <Route path="/assignments" element={<Assignments />} />
-                      <Route path="/maintenance" element={<Maintenance />} />
-                      <Route path="/usage-logs" element={<UsageLogs />} />
+                    {/* Equipment */}
+                    <Route path="/equipment-list" element={<EquipmentList />} />
+                    <Route path="/assignments" element={<Assignments />} />
+                    <Route path="/maintenance" element={<Maintenance />} />
+                    <Route path="/usage-logs" element={<UsageLogs />} />
 
-                      {/* Finance */}
-                      <Route path="/expenses" element={<Expenses />} />
-                      <Route path="/income" element={<Income />} />
-                      <Route path="/invoices" element={<Invoices />} />
-                      <Route path="/payments" element={<Payments />} />
-                      <Route path="/budgets" element={<Budgets />} />
+                    {/* Finance */}
+                    <Route path="/expenses" element={<Expenses />} />
+                    <Route path="/income" element={<Income />} />
+                    <Route path="/invoices" element={<Invoices />} />
+                    <Route path="/payments" element={<Payments />} />
+                    <Route path="/budgets" element={<Budgets />} />
 
-                      {/* Inventory */}
-                      <Route path="/warehouses" element={<Warehouses />} />
-                      <Route path="/items" element={<Items />} />
-                      <Route path="/stocks" element={<Stocks />} />
-                      <Route path="/stock-transactions" element={<StockTransactions />} />
+                    {/* Inventory */}
+                    <Route path="/warehouses" element={<Warehouses />} />
+                    <Route path="/items" element={<Items />} />
+                    <Route path="/stocks" element={<Stocks />} />
+                    <Route path="/stock-transactions" element={<StockTransactions />} />
 
-                      {/* Procurement */}
-                      <Route path="/suppliers" element={<Suppliers />} />
-                      <Route path="/purchase-requests" element={<PurchaseRequests />} />
-                      <Route path="/purchase-orders" element={<PurchaseOrders />} />
+                    {/* Procurement */}
+                    <Route path="/suppliers" element={<Suppliers />} />
+                    <Route path="/purchase-requests" element={<PurchaseRequests />} />
+                    <Route path="/purchase-orders" element={<PurchaseOrders />} />
 
-                      {/* Reports */}
-                      <Route path="/reports" element={<Reports />} />
+                    {/* Reports */}
+                    <Route path="/reports" element={<Reports />} />
 
-                      {/* Site Management */}
-                      <Route path="/sites" element={<Sites />} />
-                      <Route path="/daily-logs" element={<DailyLogs />} />
-                      <Route path="/safety-records" element={<SafetyRecords />} />
-                      <Route path="/site-inspections" element={<SiteInspections />} />
+                    {/* Site Management */}
+                    <Route path="/sites" element={<Sites />} />
+                    <Route path="/daily-logs" element={<DailyLogs />} />
+                    <Route path="/safety-records" element={<SafetyRecords />} />
+                    <Route path="/site-inspections" element={<SiteInspections />} />
 
-                      {/* Example of role-restricted */}
-                      <Route
-                        path="/admin-only"
-                        element={
-                          <ProtectedRoute role="admin">
-                            <AdminDashboard />
-                          </ProtectedRoute>
-                        }
-                      />
-                    </Routes>
-                  </main>
-                </div>
-              </PrivateRoute>
+                    {/* 404 Fallback */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Layout>
+              </ProtectedRoute>
             }
           />
         </Routes>

@@ -1,33 +1,29 @@
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from .models import Warehouse, Item, Stock, StockTransaction
-from .serializers import (
-    WarehouseSerializer,
-    ItemSerializer,
-    StockSerializer,
-    StockTransactionSerializer,
-)
-
+from rest_framework.permissions import AllowAny
+from .models import Warehouse, InventoryItem, Material, Stock, StockMovement
+from .serializers import WarehouseSerializer, InventoryItemSerializer, MaterialSerializer, StockSerializer, StockMovementSerializer
 
 class WarehouseViewSet(viewsets.ModelViewSet):
     queryset = Warehouse.objects.all()
     serializer_class = WarehouseSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
+    permission_classes = [AllowAny]
 
 class InventoryItemViewSet(viewsets.ModelViewSet):
-    queryset = Item.objects.all()
-    serializer_class = ItemSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    queryset = InventoryItem.objects.all()
+    serializer_class = InventoryItemSerializer
+    permission_classes = [AllowAny]
 
+class MaterialViewSet(viewsets.ModelViewSet):
+    queryset = Material.objects.all()
+    serializer_class = MaterialSerializer
+    permission_classes = [AllowAny]
 
 class StockViewSet(viewsets.ModelViewSet):
     queryset = Stock.objects.all()
     serializer_class = StockSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
+    permission_classes = [AllowAny]
 
 class StockMovementViewSet(viewsets.ModelViewSet):
-    queryset = StockTransaction.objects.all()
-    serializer_class = StockTransactionSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    queryset = StockMovement.objects.all()
+    serializer_class = StockMovementSerializer
+    permission_classes = [AllowAny]

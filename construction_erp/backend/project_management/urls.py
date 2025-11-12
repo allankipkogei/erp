@@ -1,3 +1,4 @@
+from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     ProjectViewSet,
@@ -14,4 +15,7 @@ router.register("milestones", MilestoneViewSet)
 router.register("documents", ProjectDocumentViewSet)
 router.register("teams", ProjectTeamViewSet)
 
-urlpatterns = router.urls
+urlpatterns = [
+    path("", include(router.urls)),
+    path("project-team/", include(router.urls)),  # optional alias
+]

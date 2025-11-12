@@ -4,9 +4,9 @@ from .models import Report, KPI
 
 @admin.register(Report)
 class ReportAdmin(admin.ModelAdmin):
-    list_display = ("title", "report_type", "project", "generated_by", "created_at")
-    list_filter = ("report_type", "created_at")
-    search_fields = ("title", "project__name", "generated_by__username")
+    list_display = ("title", "report_type", "generated_by")
+    list_filter = ("report_type",)
+    search_fields = ("title", "description")
 
 
 @admin.register(KPI)

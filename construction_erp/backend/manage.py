@@ -15,6 +15,19 @@ def main():
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
+    
+    # Auto-run migrations on runserver
+    if len(sys.argv) > 1 and sys.argv[1] == 'runserver':
+        import django
+        django.setup()  # Initialize Django apps first
+        
+        from django.core.management import call_command
+        print("🔄 Running makemigrations...")
+        call_command('makemigrations', interactive=False)
+        print("🔄 Running migrate...")
+        call_command('migrate', interactive=False)
+        print("✅ Migrations complete!")
+    
     execute_from_command_line(sys.argv)
 
 

@@ -1,15 +1,14 @@
 import React, { useState } from "react";
 import { Button } from "../../components/ui/button";
-import { X, Save, Wrench } from "lucide-react";
+import { X, Save, Wrench, RefreshCw, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-
-const API_URL = "http://localhost:8000/api";
+import api from "../../services/api";
 
 export default function EquipmentCreate() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [formData, setFormData] = useState({
     name: "",
     equipment_type: "",
@@ -21,22 +20,56 @@ export default function EquipmentCreate() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError("");
+    setFieldErrors(prev => ({ ...prev, [e.target.name]: null }));
+    setErrorMessage("");
+  };
+
+  const validate = () => {
+    const errs = {};
+    if (!formData.name?.trim()) errs.name = "Equipment name is required";
+    return errs;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
+    setErrorMessage("");
+    setFieldErrors({});
 
+    const errs = validate();
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      return;
+    }
+
+    setLoading(true);
     try {
-      const token = localStorage.getItem("access_token");
-      await axios.post(`${API_URL}/equipment/`, formData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.post("/equipment/", formData);
       navigate("/equipment");
     } catch (err) {
-      setError(err.response?.data?.detail || "Failed to create equipment");
+      console.error("Create equipment error:", err);
+      if (err && err.data) {
+        const data = err.data;
+        if (typeof data === "object") {
+          const newFieldErrors = {};
+          Object.keys(data).forEach((key) => {
+            if (Array.isArray(data[key]) && data[key].length) {
+              newFieldErrors[key] = data[key].join(" ");
+            } else if (typeof data[key] === "string") {
+              if (key === "detail") {
+                setErrorMessage(data[key]);
+              } else {
+                newFieldErrors[key] = data[key];
+              }
+            }
+          });
+          if (Object.keys(newFieldErrors).length) setFieldErrors(newFieldErrors);
+          else if (!errorMessage) setErrorMessage("Failed to create equipment");
+        } else {
+          setErrorMessage(String(data) || "Failed to create equipment");
+        }
+      } else {
+        setErrorMessage(err.message || "Network error");
+      }
     } finally {
       setLoading(false);
     }
@@ -63,9 +96,12 @@ export default function EquipmentCreate() {
           </div>
         </div>
 
-        {error && (
+        {errorMessage && (
           <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-xl">
-            <p className="text-red-700 font-medium">{error}</p>
+            <div className="flex items-center gap-3">
+              <AlertCircle className="text-red-500" size={20} />
+              <p className="text-red-700 font-medium">{errorMessage}</p>
+            </div>
           </div>
         )}
         
@@ -78,9 +114,10 @@ export default function EquipmentCreate() {
               value={formData.name}
               onChange={handleChange}
               placeholder="e.g., Excavator, Crane"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-amber-500 focus:outline-none"
+              className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none ${fieldErrors.name ? 'border-red-500' : 'border-gray-300'}`}
               required
             />
+            {fieldErrors.name && <p className="text-sm text-red-600 mt-2">{fieldErrors.name}</p>}
           </div>
 
           <div>
@@ -91,8 +128,9 @@ export default function EquipmentCreate() {
               value={formData.equipment_type}
               onChange={handleChange}
               placeholder="Heavy Machinery, Tools, etc."
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-amber-500 focus:outline-none"
+              className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none ${fieldErrors.equipment_type ? 'border-red-500' : 'border-gray-300'}`}
             />
+            {fieldErrors.equipment_type && <p className="text-sm text-red-600 mt-2">{fieldErrors.equipment_type}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -102,7 +140,7 @@ export default function EquipmentCreate() {
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-amber-500 focus:outline-none"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none"
               >
                 <option value="available">Available</option>
                 <option value="in-use">In Use</option>
@@ -117,7 +155,7 @@ export default function EquipmentCreate() {
                 name="condition"
                 value={formData.condition}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-amber-500 focus:outline-none"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none"
               >
                 <option value="excellent">Excellent</option>
                 <option value="good">Good</option>
@@ -135,7 +173,7 @@ export default function EquipmentCreate() {
               value={formData.serial_number}
               onChange={handleChange}
               placeholder="Equipment serial number"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-amber-500 focus:outline-none"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none"
             />
           </div>
 
@@ -146,7 +184,7 @@ export default function EquipmentCreate() {
               name="purchase_date"
               value={formData.purchase_date}
               onChange={handleChange}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-amber-500 focus:outline-none"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none"
             />
           </div>
 
@@ -156,8 +194,7 @@ export default function EquipmentCreate() {
               disabled={loading}
               className="flex-1 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white py-3 rounded-xl font-bold"
             >
-              <Save className="mr-2" size={20} />
-              {loading ? "Saving..." : "Add Equipment"}
+              {loading ? <><RefreshCw className="mr-2 animate-spin" size={18} />Saving...</> : <><Save className="mr-2" size={20} />Add Equipment</>}
             </Button>
             <Button
               type="button"

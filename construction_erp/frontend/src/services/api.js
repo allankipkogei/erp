@@ -1,12 +1,13 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8000/api";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000/api";
 
 // Create axios instance
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
+    Accept: "application/json",
   },
 });
 
@@ -14,54 +15,58 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("access_token");
-    if (token) {
+    if (token && config && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Handle token expiration and errors
+// Handle 401 errors (token expired)
 api.interceptors.response.use(
-  (response) => response,
+  (res) => res,
   async (error) => {
     const originalRequest = error.config;
-
-    // Handle 404 errors
-    if (error.response?.status === 404) {
-      console.error("API endpoint not found:", originalRequest.url);
-      return Promise.reject(new Error("Resource not found. Please check the API endpoint."));
-    }
-
-    // Handle 401 errors (token expiration)
+    
+    // If 401 and we haven't retried yet, try to refresh token
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-
-      try {
-        const refreshToken = localStorage.getItem("refresh_token");
-        if (refreshToken) {
+      
+      const refreshToken = localStorage.getItem("refresh_token");
+      if (refreshToken) {
+        try {
           const response = await axios.post(`${API_URL}/token/refresh/`, {
-            refresh: refreshToken,
+            refresh: refreshToken
           });
-
-          const { access } = response.data;
-          localStorage.setItem("access_token", access);
-
-          originalRequest.headers.Authorization = `Bearer ${access}`;
+          
+          const newAccessToken = response.data.access;
+          localStorage.setItem("access_token", newAccessToken);
+          
+          // Retry original request with new token
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return api(originalRequest);
+        } catch (refreshError) {
+          // Refresh failed, logout user
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+          window.location.href = "/login";
+          return Promise.reject(refreshError);
         }
-      } catch (refreshError) {
+      } else {
+        // No refresh token, logout
         localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
         window.location.href = "/login";
-        return Promise.reject(refreshError);
       }
     }
-
-    return Promise.reject(error);
+    
+    // Normalize error response
+    const normalized = {
+      message: error.response?.data?.detail || error.message,
+      status: error.response?.status || null,
+      data: error.response?.data || null,
+    };
+    return Promise.reject(normalized);
   }
 );
 

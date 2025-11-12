@@ -1,14 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "../../components/ui/button";
-import { X, Save, Users, RefreshCw, AlertCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { X, Save, Users, ArrowLeft, RefreshCw, AlertCircle } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 import api from "../../services/api";
 
-export default function EmployeeCreate() {
+export default function EmployeeEdit() {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [fieldErrors, setFieldErrors] = useState({});
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -20,83 +21,80 @@ export default function EmployeeCreate() {
     salary: ""
   });
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    setFieldErrors(prev => ({ ...prev, [e.target.name]: null }));
-    setErrorMessage("");
-  };
+  useEffect(() => {
+    loadEmployee();
+  }, [id]);
 
-  const validate = () => {
-    const errs = {};
-    if (!formData.first_name?.trim()) errs.first_name = "First name is required";
-    if (!formData.last_name?.trim()) errs.last_name = "Last name is required";
-    if (!formData.email?.trim()) errs.email = "Email is required";
-    return errs;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMessage("");
-    setFieldErrors({});
-
-    const errs = validate();
-    if (Object.keys(errs).length > 0) {
-      setFieldErrors(errs);
-      return;
-    }
-
+  const loadEmployee = async () => {
     setLoading(true);
     try {
-      const res = await api.post("/employees/", formData);
-      navigate("/employees");
+      const response = await api.get(`/employees/${id}/`);
+      setFormData({
+        first_name: response.data.first_name || "",
+        last_name: response.data.last_name || "",
+        email: response.data.email || "",
+        phone: response.data.phone || "",
+        position: response.data.position || "",
+        department: response.data.department || "",
+        hire_date: response.data.hire_date || "",
+        salary: response.data.salary || ""
+      });
     } catch (err) {
-      console.error("Create employee error:", err);
-      if (err && err.data) {
-        const data = err.data;
-        if (typeof data === "object") {
-          const newFieldErrors = {};
-          Object.keys(data).forEach((key) => {
-            if (Array.isArray(data[key]) && data[key].length) {
-              newFieldErrors[key] = data[key].join(" ");
-            } else if (typeof data[key] === "string") {
-              if (key === "detail") {
-                setErrorMessage(data[key]);
-              } else {
-                newFieldErrors[key] = data[key];
-              }
-            }
-          });
-          if (Object.keys(newFieldErrors).length) setFieldErrors(newFieldErrors);
-          else if (!errorMessage) setErrorMessage("Failed to create employee");
-        } else {
-          setErrorMessage(String(data) || "Failed to create employee");
-        }
-      } else {
-        setErrorMessage(err.message || "Network error");
-      }
+      console.error("Error loading employee:", err);
+      setErrorMessage("Failed to load employee details");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCancel = () => {
-    if (window.confirm("Cancel employee creation?")) {
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setErrorMessage("");
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setErrorMessage("");
+
+    try {
+      await api.put(`/employees/${id}/`, formData);
+      alert("✅ Employee updated successfully!");
       navigate("/employees");
+    } catch (err) {
+      console.error("Update employee error:", err);
+      setErrorMessage(err.data?.detail || "Failed to update employee");
+    } finally {
+      setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
+        <RefreshCw className="animate-spin text-emerald-600" size={48} />
+        <p className="mt-4 text-xl text-gray-700 font-semibold">Loading employee...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 p-10">
       <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl p-8">
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-            <Users className="text-white" size={32} />
-          </div>
-          <div>
-            <h1 className="text-4xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-              Add New Employee
-            </h1>
-            <p className="text-gray-600">Register a new team member</p>
+          <Button onClick={() => navigate("/employees")} variant="outline">
+            <ArrowLeft size={20} />
+          </Button>
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+              <Users className="text-white" size={32} />
+            </div>
+            <div>
+              <h1 className="text-4xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                Edit Employee
+              </h1>
+              <p className="text-gray-600">Update employee information</p>
+            </div>
           </div>
         </div>
 
@@ -118,13 +116,10 @@ export default function EmployeeCreate() {
                 name="first_name"
                 value={formData.first_name}
                 onChange={handleChange}
-                placeholder="John"
-                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none ${fieldErrors.first_name ? 'border-red-500' : 'border-gray-300'}`}
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none"
                 required
               />
-              {fieldErrors.first_name && <p className="text-sm text-red-600 mt-2">{fieldErrors.first_name}</p>}
             </div>
-
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Last Name *</label>
               <input
@@ -132,11 +127,9 @@ export default function EmployeeCreate() {
                 name="last_name"
                 value={formData.last_name}
                 onChange={handleChange}
-                placeholder="Doe"
-                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none ${fieldErrors.last_name ? 'border-red-500' : 'border-gray-300'}`}
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none"
                 required
               />
-              {fieldErrors.last_name && <p className="text-sm text-red-600 mt-2">{fieldErrors.last_name}</p>}
             </div>
           </div>
 
@@ -148,13 +141,10 @@ export default function EmployeeCreate() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="john.doe@example.com"
-                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none ${fieldErrors.email ? 'border-red-500' : 'border-gray-300'}`}
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none"
                 required
               />
-              {fieldErrors.email && <p className="text-sm text-red-600 mt-2">{fieldErrors.email}</p>}
             </div>
-
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Phone</label>
               <input
@@ -162,7 +152,6 @@ export default function EmployeeCreate() {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="+1234567890"
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none"
               />
             </div>
@@ -176,11 +165,9 @@ export default function EmployeeCreate() {
                 name="position"
                 value={formData.position}
                 onChange={handleChange}
-                placeholder="Site Manager, Engineer, etc."
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none"
               />
             </div>
-
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Department</label>
               <input
@@ -188,7 +175,6 @@ export default function EmployeeCreate() {
                 name="department"
                 value={formData.department}
                 onChange={handleChange}
-                placeholder="Construction, HR, etc."
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none"
               />
             </div>
@@ -205,7 +191,6 @@ export default function EmployeeCreate() {
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none"
               />
             </div>
-
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Salary</label>
               <input
@@ -213,7 +198,6 @@ export default function EmployeeCreate() {
                 name="salary"
                 value={formData.salary}
                 onChange={handleChange}
-                placeholder="50000"
                 step="0.01"
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none"
               />
@@ -221,19 +205,11 @@ export default function EmployeeCreate() {
           </div>
 
           <div className="flex gap-4 pt-6">
-            <Button
-              type="submit"
-              disabled={loading}
-              className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-3 rounded-xl font-bold"
-            >
-              {loading ? <><RefreshCw className="mr-2 animate-spin" size={18} />Saving...</> : <><Save className="mr-2" size={20} />Add Employee</>}
+            <Button type="submit" disabled={saving} className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-3 rounded-xl font-bold">
+              <Save className="mr-2" size={20} />
+              {saving ? "Updating..." : "Update Employee"}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="flex-1 border-2 border-gray-300 py-3 rounded-xl hover:bg-gray-100 font-bold"
-              onClick={handleCancel}
-            >
+            <Button type="button" variant="outline" className="flex-1" onClick={() => navigate("/employees")}>
               <X className="mr-2" size={20} />
               Cancel
             </Button>

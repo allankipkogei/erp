@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "../../components/ui/button";
-import { ClipboardList, Calendar, Wrench, AlertCircle, RefreshCw, CheckCircle, User, LogOut, TrendingUp } from "lucide-react";
+import { ClipboardList, Calendar, Wrench, AlertCircle, RefreshCw, CheckCircle, TrendingUp, User, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import Navbar from "../../components/Navigation/Navbar";
 
 export default function WorkerDashboard() {
   const [stats, setStats] = useState({ 
@@ -35,7 +36,6 @@ export default function WorkerDashboard() {
         equipment: Array.isArray(equipment) ? equipment.length : 0
       });
     } catch (err) {
-      console.error("Dashboard error:", err);
       setError("Failed to load dashboard data. Please try again.");
     } finally {
       setLoading(false);
@@ -67,115 +67,118 @@ export default function WorkerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
-      <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-10">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-5xl font-black bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
-              Worker Dashboard
-            </h1>
-            <p className="text-gray-600 flex items-center gap-2 text-lg">
-              <TrendingUp size={20} className="text-green-500" />
-              <span className="font-medium">Construction Enterprise Resource Planning System</span>
-            </p>
-          </div>
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-10">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+            <div>
+              <h1 className="text-5xl font-black bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
+                Worker Dashboard
+              </h1>
+              <p className="text-gray-600 flex items-center gap-2 text-lg">
+                <TrendingUp size={20} className="text-green-500" />
+                <span className="font-medium">Construction Enterprise Resource Planning System</span>
+              </p>
+            </div>
 
-          {/* Header Actions */}
-          <div className="flex gap-3">
-            <Button 
-              className="flex items-center gap-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl shadow-lg transition-all duration-300"
-              onClick={() => navigate("/profile")}
-            >
-              <User size={20} />
-              Profile
-            </Button>
-            <Button 
-              className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white px-6 py-3 rounded-xl shadow-lg transition-all duration-300"
-              onClick={handleLogout}
-            >
-              <LogOut size={20} />
-              Logout
-            </Button>
-          </div>
-        </div>
-
-        {/* Error Alert */}
-        {error && (
-          <div className="mb-6 p-5 bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-500 rounded-xl shadow-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="text-red-500" size={24} />
-                <p className="text-red-700 font-medium">{error}</p>
-              </div>
+            {/* Header Actions */}
+            <div className="flex gap-3">
               <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={loadStats}
-                className="border-red-300 text-red-700 hover:bg-red-50"
+                className="flex items-center gap-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl shadow-lg transition-all duration-300"
+                onClick={() => navigate("/profile")}
               >
-                Retry
+                <User size={20} />
+                Profile
+              </Button>
+              <Button 
+                className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white px-6 py-3 rounded-xl shadow-lg transition-all duration-300"
+                onClick={handleLogout}
+              >
+                <LogOut size={20} />
+                Logout
               </Button>
             </div>
           </div>
-        )}
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
-          <StatCard 
-            icon={ClipboardList} 
-            title="Assigned Tasks" 
-            value={stats.assignedTasks} 
-            color="blue"
-          />
-          <StatCard 
-            icon={CheckCircle} 
-            title="Completed Tasks" 
-            value={stats.completedTasks} 
-            color="green"
-          />
-          <StatCard 
-            icon={Calendar} 
-            title="Pending Tasks" 
-            value={stats.pendingTasks} 
-            color="orange"
-          />
-          <StatCard 
-            icon={Wrench} 
-            title="Equipment Assigned" 
-            value={stats.equipment} 
-            color="purple"
-          />
-        </div>
+          {/* Error Alert */}
+          {error && (
+            <div className="mb-6 p-5 bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-500 rounded-xl shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="text-red-500" size={24} />
+                  <p className="text-red-700 font-medium">{error}</p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={loadStats}
+                  className="border-red-300 text-red-700 hover:bg-red-50"
+                >
+                  Retry
+                </Button>
+              </div>
+            </div>
+          )}
 
-        {/* Quick Actions */}
-        <div className="bg-white rounded-3xl shadow-2xl p-8">
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-6">
-            Quick Actions
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <QuickActionButton
-              icon={<ClipboardList size={24} />}
-              title="View My Tasks"
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+            <StatCard 
+              icon={ClipboardList} 
+              title="Assigned Tasks" 
+              value={stats.assignedTasks} 
               color="blue"
-              onClick={() => navigate("/tasks")}
             />
-            <QuickActionButton
-              icon={<Calendar size={24} />}
-              title="Mark Attendance"
+            <StatCard 
+              icon={CheckCircle} 
+              title="Completed Tasks" 
+              value={stats.completedTasks} 
               color="green"
-              onClick={() => navigate("/attendance")}
             />
-            <QuickActionButton
-              icon={<Wrench size={24} />}
-              title="My Equipment"
+            <StatCard 
+              icon={Calendar} 
+              title="Pending Tasks" 
+              value={stats.pendingTasks} 
               color="orange"
-              onClick={() => navigate("/equipment")}
             />
+            <StatCard 
+              icon={Wrench} 
+              title="Equipment Assigned" 
+              value={stats.equipment} 
+              color="purple"
+            />
+          </div>
+
+          {/* Quick Actions */}
+          <div className="bg-white rounded-3xl shadow-2xl p-8">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-6">
+              Quick Actions
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <QuickActionButton
+                icon={<ClipboardList size={24} />}
+                title="View My Tasks"
+                color="blue"
+                onClick={() => navigate("/tasks")}
+              />
+              <QuickActionButton
+                icon={<Calendar size={24} />}
+                title="Mark Attendance"
+                color="green"
+                onClick={() => navigate("/attendance")}
+              />
+              <QuickActionButton
+                icon={<Wrench size={24} />}
+                title="My Equipment"
+                color="orange"
+                onClick={() => navigate("/equipment")}
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

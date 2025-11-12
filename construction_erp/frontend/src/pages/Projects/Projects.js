@@ -3,6 +3,7 @@ import { fetchProjects } from "../../services/api";
 import { Button } from "../../components/ui/button";
 import { PlusCircle, RefreshCw, AlertCircle, Briefcase } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Navbar from "../../components/Navigation/Navbar";
 
 export default function Projects() {
   const [projects, setProjects] = useState([]);
@@ -27,7 +28,6 @@ export default function Projects() {
     } catch (err) {
       console.error("Error loading projects:", err);
       setError(err.message || "Failed to load projects.");
-      setProjects([]);
     } finally {
       setLoading(false);
     }

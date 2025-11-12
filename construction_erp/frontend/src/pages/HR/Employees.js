@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "../../components/ui/button";
-import { PlusCircle, Users, RefreshCw, AlertCircle, Mail, Phone, Briefcase, MapPin } from "lucide-react";
+import { PlusCircle, Users, RefreshCw, AlertCircle, Mail, Phone, Briefcase, MapPin, Edit, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import Navbar from "../../components/Navigation/Navbar";
 
 export default function Employees() {
   const [employees, setEmployees] = useState([]);
@@ -51,111 +52,114 @@ export default function Employees() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50 p-10">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-10 gap-4">
-          <div>
-            <h1 className="text-5xl font-black bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 bg-clip-text text-transparent mb-2">
-              Employees
-            </h1>
-            <p className="text-gray-600 text-lg font-medium">Manage your team members</p>
-          </div>
-          <Button 
-            className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-8 py-4 rounded-xl shadow-xl transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1 font-semibold"
-            onClick={() => navigate("/employees/create")}
-          >
-            <PlusCircle size={22} />
-            Add Employee
-          </Button>
-        </div>
-
-        {/* Error Alert */}
-        {error && (
-          <div className="mb-8 p-6 bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-500 rounded-xl shadow-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="text-red-500" size={24} />
-                <p className="text-red-700 font-medium">{error}</p>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={loadEmployees}
-                className="border-red-300 text-red-700 hover:bg-red-50"
-              >
-                Retry
-              </Button>
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50 p-10">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-10 gap-4">
+            <div>
+              <h1 className="text-5xl font-black bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 bg-clip-text text-transparent mb-2">
+                Employees
+              </h1>
+              <p className="text-gray-600 text-lg font-medium">Manage your team members</p>
             </div>
+            <Button 
+              className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-8 py-4 rounded-xl shadow-xl transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1 font-semibold"
+              onClick={() => navigate("/employees/create")}
+            >
+              <PlusCircle size={22} />
+              Add Employee
+            </Button>
           </div>
-        )}
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-          <StatCard 
-            title="Total Employees"
-            value={employees.length}
-            color="blue"
-          />
-          <StatCard 
-            title="Active"
-            value={employees.filter(e => e.is_active !== false).length}
-            color="green"
-          />
-          <StatCard 
-            title="Departments"
-            value={new Set(employees.map(e => e.department).filter(Boolean)).size}
-            color="purple"
-          />
-        </div>
+          {/* Error Alert */}
+          {error && (
+            <div className="mb-8 p-6 bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-500 rounded-xl shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="text-red-500" size={24} />
+                  <p className="text-red-700 font-medium">{error}</p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={loadEmployees}
+                  className="border-red-300 text-red-700 hover:bg-red-50"
+                >
+                  Retry
+                </Button>
+              </div>
+            </div>
+          )}
 
-        {/* Search Bar */}
-        <div className="mb-6">
-          <div className="relative">
-            <Users className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Search employees by name, email, or position..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:outline-none text-lg"
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+            <StatCard 
+              title="Total Employees"
+              value={employees.length}
+              color="blue"
+            />
+            <StatCard 
+              title="Active"
+              value={employees.filter(e => e.is_active !== false).length}
+              color="green"
+            />
+            <StatCard 
+              title="Departments"
+              value={new Set(employees.map(e => e.department).filter(Boolean)).size}
+              color="purple"
             />
           </div>
-        </div>
 
-        {/* Employees Grid */}
-        {filteredEmployees.length === 0 && !error ? (
-          <div className="text-center py-24 bg-gradient-to-br from-white to-gray-50 rounded-3xl shadow-2xl border-2 border-gray-200">
-            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center">
-              <Users className="text-emerald-600" size={48} />
+          {/* Search Bar */}
+          <div className="mb-6">
+            <div className="relative">
+              <Users className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Search employees by name, email, or position..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-4 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:outline-none text-lg"
+              />
             </div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-3">
-              {searchTerm ? "No Employees Found" : "No Employees Yet"}
-            </h3>
-            <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
-              {searchTerm 
-                ? "Try adjusting your search criteria" 
-                : "Start by adding your first team member"}
-            </p>
-            {!searchTerm && (
-              <Button 
-                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-10 py-4 rounded-xl shadow-xl font-semibold text-lg"
-                onClick={() => navigate("/employees/create")}
-              >
-                <PlusCircle size={24} className="mr-2" />
-                Add First Employee
-              </Button>
-            )}
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredEmployees.map((employee) => (
-              <EmployeeCard key={employee.id} employee={employee} />
-            ))}
-          </div>
-        )}
+
+          {/* Employees Grid */}
+          {filteredEmployees.length === 0 && !error ? (
+            <div className="text-center py-24 bg-gradient-to-br from-white to-gray-50 rounded-3xl shadow-2xl border-2 border-gray-200">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center">
+                <Users className="text-emerald-600" size={48} />
+              </div>
+              <h3 className="text-3xl font-bold text-gray-900 mb-3">
+                {searchTerm ? "No Employees Found" : "No Employees Yet"}
+              </h3>
+              <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
+                {searchTerm 
+                  ? "Try adjusting your search criteria" 
+                  : "Start by adding your first team member"}
+              </p>
+              {!searchTerm && (
+                <Button 
+                  className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-10 py-4 rounded-xl shadow-xl font-semibold text-lg"
+                  onClick={() => navigate("/employees/create")}
+                >
+                  <PlusCircle size={24} className="mr-2" />
+                  Add First Employee
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredEmployees.map((employee) => (
+                <EmployeeCard key={employee.id} employee={employee} onDelete={loadEmployees} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -191,7 +195,27 @@ const StatCard = ({ title, value, color }) => {
   );
 };
 
-const EmployeeCard = ({ employee }) => {
+const EmployeeCard = ({ employee, onDelete }) => {
+  const navigate = useNavigate();
+  
+  const handleDelete = async (e) => {
+    e.stopPropagation();
+    if (window.confirm(`Delete employee ${employee.first_name} ${employee.last_name}?`)) {
+      try {
+        await api.delete(`/employees/${employee.id}/`);
+        alert("✅ Employee deleted successfully!");
+        onDelete();
+      } catch (err) {
+        alert("❌ Failed to delete employee");
+      }
+    }
+  };
+
+  const handleEdit = (e) => {
+    e.stopPropagation();
+    navigate(`/employees/${employee.id}/edit`);
+  };
+
   const getInitials = () => {
     const first = employee.first_name?.[0] || employee.email?.[0] || 'E';
     const last = employee.last_name?.[0] || '';
@@ -264,6 +288,18 @@ const EmployeeCard = ({ employee }) => {
         }`}>
           {employee.is_active !== false ? '✅ Active' : '❌ Inactive'}
         </span>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="mt-4 pt-4 border-t-2 border-gray-100 flex gap-2">
+        <Button onClick={handleEdit} variant="outline" className="flex-1" size="sm">
+          <Edit size={16} className="mr-1" />
+          Edit
+        </Button>
+        <Button onClick={handleDelete} variant="outline" className="flex-1 border-red-300 text-red-700 hover:bg-red-50" size="sm">
+          <Trash2 size={16} className="mr-1" />
+          Delete
+        </Button>
       </div>
     </div>
   );

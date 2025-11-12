@@ -1,15 +1,14 @@
 import React, { useState } from "react";
 import { Button } from "../../components/ui/button";
-import { X, Save, ClipboardList } from "lucide-react";
+import { X, Save, ClipboardList, RefreshCw, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-
-const API_URL = "http://localhost:8000/api";
+import api from "../../services/api";
 
 export default function TaskCreate() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -20,22 +19,56 @@ export default function TaskCreate() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError("");
+    setFieldErrors(prev => ({ ...prev, [e.target.name]: null }));
+    setErrorMessage("");
+  };
+
+  const validate = () => {
+    const errs = {};
+    if (!formData.title?.trim()) errs.title = "Task title is required";
+    return errs;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
+    setErrorMessage("");
+    setFieldErrors({});
 
+    const errs = validate();
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      return;
+    }
+
+    setLoading(true);
     try {
-      const token = localStorage.getItem("access_token");
-      await axios.post(`${API_URL}/tasks/`, formData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.post("/tasks/", formData);
       navigate("/tasks");
     } catch (err) {
-      setError(err.response?.data?.detail || "Failed to create task");
+      console.error("Create task error:", err);
+      if (err && err.data) {
+        const data = err.data;
+        if (typeof data === "object") {
+          const newFieldErrors = {};
+          Object.keys(data).forEach((key) => {
+            if (Array.isArray(data[key]) && data[key].length) {
+              newFieldErrors[key] = data[key].join(" ");
+            } else if (typeof data[key] === "string") {
+              if (key === "detail") {
+                setErrorMessage(data[key]);
+              } else {
+                newFieldErrors[key] = data[key];
+              }
+            }
+          });
+          if (Object.keys(newFieldErrors).length) setFieldErrors(newFieldErrors);
+          else if (!errorMessage) setErrorMessage("Failed to create task");
+        } else {
+          setErrorMessage(String(data) || "Failed to create task");
+        }
+      } else {
+        setErrorMessage(err.message || "Network error");
+      }
     } finally {
       setLoading(false);
     }
@@ -62,9 +95,12 @@ export default function TaskCreate() {
           </div>
         </div>
 
-        {error && (
+        {errorMessage && (
           <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-xl">
-            <p className="text-red-700 font-medium">{error}</p>
+            <div className="flex items-center gap-3">
+              <AlertCircle className="text-red-500" size={20} />
+              <p className="text-red-700 font-medium">{errorMessage}</p>
+            </div>
           </div>
         )}
         
@@ -77,9 +113,10 @@ export default function TaskCreate() {
               value={formData.title}
               onChange={handleChange}
               placeholder="Enter task title"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:outline-none"
+              className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none ${fieldErrors.title ? 'border-red-500' : 'border-gray-300'}`}
               required
             />
+            {fieldErrors.title && <p className="text-sm text-red-600 mt-2">{fieldErrors.title}</p>}
           </div>
 
           <div>
@@ -89,9 +126,10 @@ export default function TaskCreate() {
               value={formData.description}
               onChange={handleChange}
               placeholder="Task description"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:outline-none"
+              className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none ${fieldErrors.description ? 'border-red-500' : 'border-gray-300'}`}
               rows="4"
             />
+            {fieldErrors.description && <p className="text-sm text-red-600 mt-2">{fieldErrors.description}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -101,7 +139,7 @@ export default function TaskCreate() {
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:outline-none"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none"
               >
                 <option value="pending">Pending</option>
                 <option value="in-progress">In Progress</option>
@@ -115,7 +153,7 @@ export default function TaskCreate() {
                 name="priority"
                 value={formData.priority}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:outline-none"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -132,7 +170,7 @@ export default function TaskCreate() {
               name="due_date"
               value={formData.due_date}
               onChange={handleChange}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:outline-none"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none"
             />
           </div>
 
@@ -142,8 +180,7 @@ export default function TaskCreate() {
               disabled={loading}
               className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 rounded-xl font-bold"
             >
-              <Save className="mr-2" size={20} />
-              {loading ? "Saving..." : "Create Task"}
+              {loading ? <><RefreshCw className="mr-2 animate-spin" size={18} />Creating...</> : <><Save className="mr-2" size={20} />Create Task</>}
             </Button>
             <Button
               type="button"

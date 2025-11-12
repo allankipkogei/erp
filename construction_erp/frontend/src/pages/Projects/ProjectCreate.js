@@ -1,15 +1,11 @@
 import React, { useState } from "react";
-import { Button } from "../../components/ui/button";
-import { X, Save, Building2, Calendar, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-
-const API_URL = "http://localhost:8000/api";
+import api from "../../services/api";
+import { Button } from "../../components/ui/button";
+import { Building2, Calendar, FileText, Save, X, RefreshCw, AlertCircle } from "lucide-react";
 
 export default function ProjectCreate() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -19,57 +15,72 @@ export default function ProjectCreate() {
     budget: "",
     location: ""
   });
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(""); // general
+  const [fieldErrors, setFieldErrors] = useState({}); // field-specific
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-    setError("");
+    setFormData({...formData, [e.target.name]: e.target.value});
+    setFieldErrors(prev => ({...prev, [e.target.name]: null}));
+    setErrorMessage("");
+  };
+
+  const validate = () => {
+    const errs = {};
+    if (!formData.name || !formData.name.trim()) errs.name = "Project name is required";
+    // add other client validations if needed
+    return errs;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    if (!formData.name) {
-      setError("Project name is required");
-      setLoading(false);
+    setErrorMessage("");
+    setFieldErrors({});
+    const errs = validate();
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
       return;
     }
 
+    setLoading(true);
     try {
-      const token = localStorage.getItem("access_token");
-      const response = await axios.post(
-        `${API_URL}/projects/`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        }
-      );
-
-      console.log("Project created:", response.data);
-      navigate("/projects");
+      // use centralized api instance (adds Authorization automatically)
+      const res = await api.post("/projects/", formData);
+      // on success navigate to project detail
+      const created = res.data;
+      navigate(`/projects/${created.id}`);
     } catch (err) {
+      // err is normalized by interceptor: { message, status, data }
       console.error("Create project error:", err);
-      setError(err.response?.data?.detail || "Failed to create project");
+      if (err && err.data) {
+        // If server sent field errors (DRF style), show them
+        // DRF returns dict of field -> [errors] or "detail"
+        const data = err.data;
+        if (typeof data === "object") {
+          const newFieldErrors = {};
+          // map common patterns
+          Object.keys(data).forEach((key) => {
+            if (Array.isArray(data[key]) && data[key].length) {
+              newFieldErrors[key] = data[key].join(" ");
+            } else if (typeof data[key] === "string") {
+              // some backends send { detail: "..." }
+              if (key === "detail") {
+                setErrorMessage(data[key]);
+              } else {
+                newFieldErrors[key] = data[key];
+              }
+            }
+          });
+          if (Object.keys(newFieldErrors).length) setFieldErrors(newFieldErrors);
+          else if (!errorMessage) setErrorMessage("Failed to create project");
+        } else {
+          setErrorMessage(String(data) || "Failed to create project");
+        }
+      } else {
+        setErrorMessage(err.message || "Network error. Check backend.");
+      }
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCancel = () => {
-    const hasChanges = Object.values(formData).some(value => value !== "" && value !== "pending");
-    if (hasChanges) {
-      if (window.confirm("Cancel project creation? All progress will be lost.")) {
-        navigate("/projects");
-      }
-    } else {
-      navigate("/projects");
     }
   };
 
@@ -88,151 +99,84 @@ export default function ProjectCreate() {
           </div>
         </div>
 
-        {error && (
+        {/* General error */}
+        {errorMessage && (
           <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-xl">
-            <p className="text-red-700 font-medium">{error}</p>
+            <div className="flex items-center gap-3">
+              <AlertCircle className="text-red-500" size={20} />
+              <p className="text-red-700 font-medium">{errorMessage}</p>
+            </div>
           </div>
         )}
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Project Name */}
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">
-              Project Name *
-            </label>
-            <div className="relative">
-              <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Enter project name"
-                className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
-                required
-              />
-            </div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Project Name *</label>
+            <input
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none ${fieldErrors.name ? 'border-red-500' : 'border-gray-300'}`}
+              placeholder="Project name"
+              required
+            />
+            {fieldErrors.name && <p className="text-sm text-red-600 mt-2">{fieldErrors.name}</p>}
           </div>
 
-          {/* Description */}
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">
-              Description
-            </label>
-            <div className="relative">
-              <FileText className="absolute left-3 top-3 text-gray-400" size={20} />
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Project description"
-                className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
-                rows="4"
-              />
-            </div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows={4}
+              className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none ${fieldErrors.description ? 'border-red-500' : 'border-gray-300'}`}
+              placeholder="Brief description"
+            />
+            {fieldErrors.description && <p className="text-sm text-red-600 mt-2">{fieldErrors.description}</p>}
           </div>
 
           {/* Status */}
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">
-              Status
-            </label>
-            <select
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
-            >
+            <label className="block text-sm font-bold text-gray-700 mb-2">Status</label>
+            <select name="status" value={formData.status} onChange={handleChange} className="w-full px-4 py-3 border-2 rounded-xl">
               <option value="pending">Pending</option>
               <option value="active">Active</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
             </select>
-          </div>
-
-          {/* Start Date */}
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">
-              Start Date
-            </label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="date"
-                name="start_date"
-                value={formData.start_date}
-                onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
-              />
-            </div>
-          </div>
-
-          {/* End Date */}
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">
-              End Date
-            </label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="date"
-                name="end_date"
-                value={formData.end_date}
-                onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
-              />
-            </div>
+            {fieldErrors.status && <p className="text-sm text-red-600 mt-2">{fieldErrors.status}</p>}
           </div>
 
           {/* Budget */}
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">
-              Budget
-            </label>
-            <input
-              type="number"
-              name="budget"
-              value={formData.budget}
-              onChange={handleChange}
-              placeholder="0.00"
-              step="0.01"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
-            />
+            <label className="block text-sm font-bold text-gray-700 mb-2">Budget</label>
+            <input name="budget" value={formData.budget} onChange={handleChange} type="number" step="0.01" className="w-full px-4 py-3 border-2 rounded-xl" />
+            {fieldErrors.budget && <p className="text-sm text-red-600 mt-2">{fieldErrors.budget}</p>}
           </div>
 
-          {/* Location */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Start Date</label>
+              <input name="start_date" value={formData.start_date} onChange={handleChange} type="date" className="w-full px-4 py-3 border-2 rounded-xl" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">End Date</label>
+              <input name="end_date" value={formData.end_date} onChange={handleChange} type="date" className="w-full px-4 py-3 border-2 rounded-xl" />
+            </div>
+          </div>
+
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">
-              Location
-            </label>
-            <input
-              type="text"
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
-              placeholder="Project location"
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
-            />
+            <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
+            <input name="location" value={formData.location} onChange={handleChange} className="w-full px-4 py-3 border-2 rounded-xl" />
           </div>
 
-          {/* Action Buttons */}
           <div className="flex gap-4 pt-6">
-            <Button
-              type="submit"
-              disabled={loading}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 rounded-xl font-bold"
-            >
-              <Save className="mr-2" size={20} />
-              {loading ? "Creating..." : "Create Project"}
+            <Button type="submit" className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-bold" disabled={loading}>
+              {loading ? <><RefreshCw className="mr-2 animate-spin" size={18} />Creating...</> : <><Save className="mr-2" size={18} />Create Project</>}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="flex-1 border-2 border-gray-300 py-3 rounded-xl hover:bg-gray-100 font-bold"
-              onClick={handleCancel}
-            >
-              <X className="mr-2" size={20} />
-              Cancel
+            <Button type="button" variant="outline" className="flex-1 border-2 rounded-xl py-3" onClick={() => navigate("/projects")}>
+              <X className="mr-2" size={18} />Cancel
             </Button>
           </div>
         </form>

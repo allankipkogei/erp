@@ -3,6 +3,7 @@ import { Button } from "../../components/ui/button";
 import { MapPin, PlusCircle, RefreshCw, AlertCircle, Building, Users, Calendar, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import Navbar from "../../components/Navigation/Navbar";
 
 export default function Sites() {
   const [sites, setSites] = useState([]);
@@ -43,116 +44,119 @@ export default function Sites() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 p-10">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-10 gap-4">
-          <div>
-            <h1 className="text-5xl font-black bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent mb-2">
-              Construction Sites
-            </h1>
-            <p className="text-gray-600 text-lg font-medium">Manage construction sites & operations</p>
-          </div>
-          <div className="flex gap-3">
-            <Button 
-              className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white px-8 py-4 rounded-xl shadow-xl transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1 font-semibold"
-              onClick={() => navigate("/sites/create")}
-            >
-              <PlusCircle size={22} />
-              Add Site
-            </Button>
-            <Button 
-              className="flex items-center gap-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white px-8 py-4 rounded-xl shadow-xl transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1 font-semibold"
-              onClick={() => navigate("/daily-log")}
-            >
-              <Calendar size={22} />
-              Daily Log
-            </Button>
-            <Button 
-              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-xl shadow-xl transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1 font-semibold"
-              onClick={() => navigate("/safety-record")}
-            >
-              <Shield size={22} />
-              Safety Record
-            </Button>
-          </div>
-        </div>
-
-        {/* Error Alert */}
-        {error && (
-          <div className="mb-8 p-6 bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-500 rounded-xl shadow-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="text-red-500" size={24} />
-                <p className="text-red-700 font-medium">{error}</p>
-              </div>
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 p-10">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-10 gap-4">
+            <div>
+              <h1 className="text-5xl font-black bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                Construction Sites
+              </h1>
+              <p className="text-gray-600 text-lg font-medium">Manage construction sites & operations</p>
+            </div>
+            <div className="flex gap-3">
               <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={loadSites}
-                className="border-red-300 text-red-700 hover:bg-red-50"
+                className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white px-8 py-4 rounded-xl shadow-xl transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1 font-semibold"
+                onClick={() => navigate("/sites/create")}
               >
-                Retry
+                <PlusCircle size={22} />
+                Add Site
+              </Button>
+              <Button 
+                className="flex items-center gap-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white px-8 py-4 rounded-xl shadow-xl transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1 font-semibold"
+                onClick={() => navigate("/daily-log")}
+              >
+                <Calendar size={22} />
+                Daily Log
+              </Button>
+              <Button 
+                className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-xl shadow-xl transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1 font-semibold"
+                onClick={() => navigate("/safety-record")}
+              >
+                <Shield size={22} />
+                Safety Record
               </Button>
             </div>
           </div>
-        )}
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 mb-8">
-          <StatCard 
-            icon={Building}
-            title="Total Sites"
-            value={sites.length}
-            color="red"
-          />
-          <StatCard 
-            icon={MapPin}
-            title="Active Sites"
-            value={sites.filter(s => s.status === 'active').length}
-            color="green"
-          />
-          <StatCard 
-            icon={Users}
-            title="Workers On-Site"
-            value={sites.reduce((sum, s) => sum + (s.workers_count || 0), 0)}
-            color="blue"
-          />
-          <StatCard 
-            icon={Shield}
-            title="Safety Score"
-            value="98%"
-            color="orange"
-          />
-        </div>
-
-        {/* Sites Grid */}
-        {sites.length === 0 && !error ? (
-          <div className="text-center py-24 bg-gradient-to-br from-white to-gray-50 rounded-3xl shadow-2xl border-2 border-gray-200">
-            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-red-100 to-pink-100 flex items-center justify-center">
-              <MapPin className="text-red-600" size={48} />
+          {/* Error Alert */}
+          {error && (
+            <div className="mb-8 p-6 bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-500 rounded-xl shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="text-red-500" size={24} />
+                  <p className="text-red-700 font-medium">{error}</p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={loadSites}
+                  className="border-red-300 text-red-700 hover:bg-red-50"
+                >
+                  Retry
+                </Button>
+              </div>
             </div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-3">No Sites Yet</h3>
-            <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
-              Start by adding your first construction site
-            </p>
-            <Button 
-              className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white px-10 py-4 rounded-xl shadow-xl font-semibold text-lg"
-              onClick={() => navigate("/sites/create")}
-            >
-              <PlusCircle size={24} className="mr-2" />
-              Add First Site
-            </Button>
+          )}
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 mb-8">
+            <StatCard 
+              icon={Building}
+              title="Total Sites"
+              value={sites.length}
+              color="red"
+            />
+            <StatCard 
+              icon={MapPin}
+              title="Active Sites"
+              value={sites.filter(s => s.status === 'active').length}
+              color="green"
+            />
+            <StatCard 
+              icon={Users}
+              title="Workers On-Site"
+              value={sites.reduce((sum, s) => sum + (s.workers_count || 0), 0)}
+              color="blue"
+            />
+            <StatCard 
+              icon={Shield}
+              title="Safety Score"
+              value="98%"
+              color="orange"
+            />
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sites.map((site) => (
-              <SiteCard key={site.id} site={site} navigate={navigate} />
-            ))}
-          </div>
-        )}
+
+          {/* Sites Grid */}
+          {sites.length === 0 && !error ? (
+            <div className="text-center py-24 bg-gradient-to-br from-white to-gray-50 rounded-3xl shadow-2xl border-2 border-gray-200">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-red-100 to-pink-100 flex items-center justify-center">
+                <MapPin className="text-red-600" size={48} />
+              </div>
+              <h3 className="text-3xl font-bold text-gray-900 mb-3">No Sites Yet</h3>
+              <p className="text-gray-600 mb-8 max-w-md mx-auto text-lg">
+                Start by adding your first construction site
+              </p>
+              <Button 
+                className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white px-10 py-4 rounded-xl shadow-xl font-semibold text-lg"
+                onClick={() => navigate("/sites/create")}
+              >
+                <PlusCircle size={24} className="mr-2" />
+                Add First Site
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {sites.map((site) => (
+                <SiteCard key={site.id} site={site} navigate={navigate} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

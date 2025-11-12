@@ -3,6 +3,7 @@ import { fetchDashboardStats } from "../../services/dashboard";
 import { Button } from "../../components/ui/button";
 import { PlusCircle, Users, Building2, Wrench, AlertCircle, RefreshCw, TrendingUp, User, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Navbar from "../../components/Navigation/Navbar";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ projects: 0, employees: 0, equipments: 0 });
@@ -49,152 +50,155 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-10">
-        {/* Header with Construction Theme */}
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-5xl font-black bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              Admin Dashboard
-            </h1>
-            <p className="text-gray-600 flex items-center gap-2 text-lg">
-              <TrendingUp size={20} className="text-emerald-500" />
-              <span className="font-medium">Construction Enterprise Resource Planning System</span>
-            </p>
-          </div>
-          
-          {/* Header Actions */}
-          <div className="flex gap-3">
-            <Button 
-              className="flex items-center gap-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl shadow-lg transition-all duration-300"
-              onClick={() => navigate("/profile")}
-            >
-              <User size={20} />
-              Profile
-            </Button>
-            <Button 
-              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-xl shadow-xl transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1 font-semibold"
-              onClick={() => navigate("/projects/create")}
-            >
-              <PlusCircle size={22} />
-              New Project
-            </Button>
-            <Button 
-              className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white px-6 py-3 rounded-xl shadow-lg transition-all duration-300"
-              onClick={handleLogout}
-            >
-              <LogOut size={20} />
-              Logout
-            </Button>
-          </div>
-        </div>
-
-        {/* Error Alert */}
-        {error && (
-          <div className="mb-6 p-5 bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-500 rounded-xl shadow-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="text-red-500" size={24} />
-                <p className="text-red-700 font-medium">{error}</p>
-              </div>
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-10">
+          {/* Header with Construction Theme */}
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+            <div>
+              <h1 className="text-5xl font-black bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                Admin Dashboard
+              </h1>
+              <p className="text-gray-600 flex items-center gap-2 text-lg">
+                <TrendingUp size={20} className="text-emerald-500" />
+                <span className="font-medium">Construction Enterprise Resource Planning System</span>
+              </p>
+            </div>
+            
+            {/* Header Actions */}
+            <div className="flex gap-3">
               <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={loadStats}
-                className="border-red-300 text-red-700 hover:bg-red-50"
+                className="flex items-center gap-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl shadow-lg transition-all duration-300"
+                onClick={() => navigate("/profile")}
               >
-                Retry
+                <User size={20} />
+                Profile
+              </Button>
+              <Button 
+                className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-xl shadow-xl transition-all duration-300 hover:shadow-2xl transform hover:-translate-y-1 font-semibold"
+                onClick={() => navigate("/projects/create")}
+              >
+                <PlusCircle size={22} />
+                New Project
+              </Button>
+              <Button 
+                className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white px-6 py-3 rounded-xl shadow-lg transition-all duration-300"
+                onClick={handleLogout}
+              >
+                <LogOut size={20} />
+                Logout
               </Button>
             </div>
           </div>
-        )}
 
-        {/* Stats Grid with Enhanced Colors */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-          <StatCard 
-            icon={Building2} 
-            title="Active Projects" 
-            value={stats.projects} 
-            buttonText="View All Projects" 
-            color="blue" 
-            onClick={() => navigate("/projects")} 
-          />
-          <StatCard 
-            icon={Users} 
-            title="Team Members" 
-            value={stats.employees} 
-            buttonText="Manage Team" 
-            color="emerald" 
-            onClick={() => navigate("/employees")} 
-          />
-          <StatCard 
-            icon={Wrench} 
-            title="Equipment Fleet" 
-            value={stats.equipments} 
-            buttonText="View Equipment" 
-            color="amber" 
-            onClick={() => navigate("/equipment")} 
-          />
-        </div>
+          {/* Error Alert */}
+          {error && (
+            <div className="mb-6 p-5 bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-500 rounded-xl shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="text-red-500" size={24} />
+                  <p className="text-red-700 font-medium">{error}</p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={loadStats}
+                  className="border-red-300 text-red-700 hover:bg-red-50"
+                >
+                  Retry
+                </Button>
+              </div>
+            </div>
+          )}
 
-        {/* Quick Access Grid */}
-        <div className="bg-white rounded-3xl shadow-2xl p-8">
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-6">
-            Quick Access
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            <QuickAccessButton 
-              title="Tasks"
-              icon="📋"
-              onClick={() => navigate("/tasks")}
-              color="blue"
+          {/* Stats Grid with Enhanced Colors */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+            <StatCard 
+              icon={Building2} 
+              title="Active Projects" 
+              value={stats.projects} 
+              buttonText="View All Projects" 
+              color="blue" 
+              onClick={() => navigate("/projects")} 
             />
-            <QuickAccessButton 
-              title="Inventory"
-              icon="📦"
-              onClick={() => navigate("/inventory")}
-              color="purple"
+            <StatCard 
+              icon={Users} 
+              title="Team Members" 
+              value={stats.employees} 
+              buttonText="Manage Team" 
+              color="emerald" 
+              onClick={() => navigate("/employees")} 
             />
-            <QuickAccessButton 
-              title="Finance"
-              icon="💰"
-              onClick={() => navigate("/finance")}
-              color="green"
+            <StatCard 
+              icon={Wrench} 
+              title="Equipment Fleet" 
+              value={stats.equipments} 
+              buttonText="View Equipment" 
+              color="amber" 
+              onClick={() => navigate("/equipment")} 
             />
-            <QuickAccessButton 
-              title="Sites"
-              icon="🏗️"
-              onClick={() => navigate("/sites")}
-              color="orange"
-            />
-            <QuickAccessButton 
-              title="Reports"
-              icon="📊"
-              onClick={() => navigate("/reports")}
-              color="indigo"
-            />
-            <QuickAccessButton 
-              title="Attendance"
-              icon="📅"
-              onClick={() => navigate("/attendance")}
-              color="teal"
-            />
-            <QuickAccessButton 
-              title="Procurement"
-              icon="🛒"
-              onClick={() => navigate("/purchase-request")}
-              color="pink"
-            />
-            <QuickAccessButton 
-              title="Safety"
-              icon="🛡️"
-              onClick={() => navigate("/safety-record")}
-              color="red"
-            />
+          </div>
+
+          {/* Quick Access Grid */}
+          <div className="bg-white rounded-3xl shadow-2xl p-8">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-6">
+              Quick Access
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              <QuickAccessButton 
+                title="Tasks"
+                icon="📋"
+                onClick={() => navigate("/tasks")}
+                color="blue"
+              />
+              <QuickAccessButton 
+                title="Inventory"
+                icon="📦"
+                onClick={() => navigate("/inventory")}
+                color="purple"
+              />
+              <QuickAccessButton 
+                title="Finance"
+                icon="💰"
+                onClick={() => navigate("/finance")}
+                color="green"
+              />
+              <QuickAccessButton 
+                title="Sites"
+                icon="🏗️"
+                onClick={() => navigate("/sites")}
+                color="orange"
+              />
+              <QuickAccessButton 
+                title="Reports"
+                icon="📊"
+                onClick={() => navigate("/reports")}
+                color="indigo"
+              />
+              <QuickAccessButton 
+                title="Attendance"
+                icon="📅"
+                onClick={() => navigate("/attendance")}
+                color="teal"
+              />
+              <QuickAccessButton 
+                title="Procurement"
+                icon="🛒"
+                onClick={() => navigate("/purchase-request")}
+                color="pink"
+              />
+              <QuickAccessButton 
+                title="Safety"
+                icon="🛡️"
+                onClick={() => navigate("/safety-record")}
+                color="red"
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

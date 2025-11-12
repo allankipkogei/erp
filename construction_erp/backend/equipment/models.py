@@ -1,22 +1,32 @@
 from django.db import models
 from django.conf import settings
 from project_management.models import Project
+from django.utils import timezone
 
 
 class Equipment(models.Model):
-    EQUIPMENT_STATUS = (
-        ("available", "Available"),
-        ("in_use", "In Use"),
-        ("maintenance", "Under Maintenance"),
-        ("retired", "Retired"),
-    )
-
+    STATUS_CHOICES = [
+        ('available', 'Available'),
+        ('in-use', 'In Use'),
+        ('maintenance', 'Maintenance'),
+        ('retired', 'Retired'),
+    ]
+    
+    CONDITION_CHOICES = [
+        ('excellent', 'Excellent'),
+        ('good', 'Good'),
+        ('fair', 'Fair'),
+        ('poor', 'Poor'),
+    ]
+    
     name = models.CharField(max_length=200)
-    description = models.TextField(blank=True, null=True)
-    category = models.CharField(max_length=100)
-    purchase_date = models.DateField()
-    cost = models.DecimalField(max_digits=12, decimal_places=2)
-    status = models.CharField(max_length=50, choices=EQUIPMENT_STATUS, default="available")
+    equipment_type = models.CharField(max_length=100, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
+    condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, default='good')
+    purchase_date = models.DateField(blank=True, null=True)
+    serial_number = models.CharField(max_length=100, blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name

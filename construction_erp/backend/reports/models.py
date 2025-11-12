@@ -1,27 +1,29 @@
 from django.db import models
 from django.conf import settings
 from project_management.models import Project
+from django.utils import timezone
 
 
 class Report(models.Model):
-    REPORT_TYPES = [
-        ("finance", "Finance"),
-        ("procurement", "Procurement"),
+    REPORT_TYPE_CHOICES = [
+        ("financial", "Financial"),
+        ("project", "Project"),
+        ("safety", "Safety"),
         ("inventory", "Inventory"),
         ("hr", "HR"),
         ("equipment", "Equipment"),
-        ("site", "Site Management"),
-        ("project", "Project Management"),
-        ("custom", "Custom"),
     ]
 
-    title = models.CharField(max_length=255)
-    report_type = models.CharField(max_length=50, choices=REPORT_TYPES)
-    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True, related_name="reports")
-    generated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    content = models.TextField(help_text="Summary or raw report data")
-    file = models.FileField(upload_to="reports/", null=True, blank=True)
+    title = models.CharField(max_length=200)
+    report_type = models.CharField(max_length=50, choices=REPORT_TYPE_CHOICES, default="financial")
+    start_date = models.DateField(blank=True, null=True)
+    end_date = models.DateField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"{self.title} ({self.report_type})"

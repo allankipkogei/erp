@@ -1,4 +1,5 @@
 from rest_framework import viewsets, status
+from rest_framework import serializers  # ADD THIS IMPORT
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -17,6 +18,19 @@ class SiteViewSet(viewsets.ModelViewSet):
     queryset = Site.objects.all()
     serializer_class = SiteSerializer
     permission_classes = [AllowAny]
+    
+    def create(self, request, *args, **kwargs):
+        """Override create to add better error handling"""
+        print(f"Site create data: {request.data}")
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except serializers.ValidationError as e:
+            print(f"Validation error: {e.detail}")
+            return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=True, methods=['post'])
     def activate(self, request, pk=None):
@@ -41,6 +55,19 @@ class DailyLogViewSet(viewsets.ModelViewSet):
     queryset = DailyLog.objects.all()
     serializer_class = DailyLogSerializer
     permission_classes = [AllowAny]
+    
+    def create(self, request, *args, **kwargs):
+        """Override create to add better error handling"""
+        print(f"DailyLog create data: {request.data}")
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except serializers.ValidationError as e:
+            print(f"Validation error: {e.detail}")
+            return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=False, methods=['get'])
     def today(self, request):
@@ -75,10 +102,22 @@ class SafetyRecordViewSet(viewsets.ModelViewSet):
     serializer_class = SafetyRecordSerializer
     permission_classes = [AllowAny]
     
-    @action(detail=True, methods=['post'])
-    def resolve(self, request, pk=None):
-        """Resolve safety incident"""
-        record = self.get_object()
-        record.status = 'resolved'
-        record.save()
-        return Response({'status': 'safety incident resolved'})
+    def create(self, request, *args, **kwargs):
+        """Override create to add better error handling"""
+        print(f"SafetyRecord create data: {request.data}")
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except serializers.ValidationError as e:
+            print(f"Validation error: {e.detail}")
+            return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['get'])
+    def critical(self, request):
+        """Get critical severity records"""
+        records = SafetyRecord.objects.filter(severity='critical')
+        serializer = self.get_serializer(records, many=True)
+        return Response(serializer.data)

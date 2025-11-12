@@ -23,12 +23,18 @@ class PurchaseOrderItemSerializer(serializers.ModelSerializer):
 
 
 class PurchaseOrderSerializer(serializers.ModelSerializer):
-    supplier = SupplierSerializer(read_only=True)
-    supplier_id = serializers.PrimaryKeyRelatedField(
-        queryset=Supplier.objects.all(), source="supplier", write_only=True
+    supplier = serializers.PrimaryKeyRelatedField(
+        queryset=Supplier.objects.all(),
+        required=False,
+        allow_null=True,
     )
-    items = PurchaseOrderItemSerializer(many=True, read_only=True)
+    order_date = serializers.DateField(required=False, allow_null=True)
+    delivery_date = serializers.DateField(required=False, allow_null=True)
 
     class Meta:
         model = PurchaseOrder
-        fields = ["id", "supplier", "supplier_id", "created_by", "order_date", "expected_delivery", "status", "items"]
+        fields = "__all__"
+        extra_kwargs = {
+            "status": {"required": False},
+            "notes": {"required": False, "allow_blank": True},
+        }

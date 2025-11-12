@@ -14,6 +14,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from accounts.models import CustomUser
 from accounts.serializers import UserSerializer
+from rest_framework import serializers  # ADD THIS IMPORT
 
 User = get_user_model()
 
@@ -28,6 +29,19 @@ class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [AllowAny]
+    
+    def create(self, request, *args, **kwargs):
+        """Override create to add better error handling"""
+        print(f"Project create data: {request.data}")  # Debug log
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except serializers.ValidationError as e:
+            print(f"Validation error: {e.detail}")  # Debug log
+            return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
     
     @decorators.action(detail=True, methods=['get'])
     def tasks(self, request, pk=None):
@@ -52,6 +66,19 @@ class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
     permission_classes = [AllowAny]
+    
+    def create(self, request, *args, **kwargs):
+        """Override create to add better error handling"""
+        print(f"Task create data: {request.data}")  # Debug log
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except serializers.ValidationError as e:
+            print(f"Validation error: {e.detail}")  # Debug log
+            return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
     
     @decorators.action(detail=True, methods=['post'])
     def complete(self, request, pk=None):

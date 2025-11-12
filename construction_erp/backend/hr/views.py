@@ -1,4 +1,5 @@
 from rest_framework import viewsets, status
+from rest_framework import serializers
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -18,6 +19,18 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     queryset = Employee.objects.all()
     serializer_class = EmployeeSerializer
     permission_classes = [AllowAny]
+    
+    def create(self, request, *args, **kwargs):
+        """Override create to add better error handling"""
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except serializers.ValidationError as e:
+            print(f"Validation error: {e.detail}")
+            return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=True, methods=['post'])
     def activate(self, request, pk=None):
@@ -44,58 +57,26 @@ class AttendanceViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
     
     def create(self, request, *args, **kwargs):
-        """Create attendance record without requiring employee"""
-        data = request.data.copy()
-        
-        # If employee is not provided, create attendance without employee
-        if 'employee' not in data or not data['employee']:
-            data['employee'] = None
-        
-        # Set default date if not provided
-        if 'date' not in data:
-            data['date'] = timezone.now().date()
-        
-        # Set default check_in if not provided
-        if 'check_in' not in data:
-            data['check_in'] = timezone.now()
-        
-        serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        """Override create to add better error handling"""
+        print(f"Attendance create data: {request.data}")
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except serializers.ValidationError as e:
+            print(f"Validation error: {e.detail}")
+            return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
     
-    @action(detail=False, methods=['post'])
-    def mark_present(self, request):
-        """Mark attendance as present"""
+    @action(detail=False, methods=['get'])
+    def today(self, request):
+        """Get today's attendance"""
+        from django.utils import timezone
         today = timezone.now().date()
-        
-        # Create attendance record
-        attendance = Attendance.objects.create(
-            date=today,
-            status='present',
-            check_in=timezone.now(),
-            check_out=timezone.now()
-        )
-        
-        serializer = self.get_serializer(attendance)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
-    @action(detail=False, methods=['post'])
-    def mark_absent(self, request):
-        """Mark attendance as absent"""
-        today = timezone.now().date()
-        
-        # Create attendance record
-        attendance = Attendance.objects.create(
-            date=today,
-            status='absent',
-            check_in=timezone.now()
-        )
-        
-        serializer = self.get_serializer(attendance)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        attendance = Attendance.objects.filter(date=today)
+        serializer = self.get_serializer(attendance, many=True)
+        return Response(serializer.data)
 
 class PayrollViewSet(viewsets.ModelViewSet):
     """

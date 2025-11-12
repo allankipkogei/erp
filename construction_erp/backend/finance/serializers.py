@@ -1,22 +1,16 @@
 from rest_framework import serializers
-from .models import Expense, Income, Invoice, Payment, Budget
-
-
-class ExpenseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Expense
-        fields = "__all__"
-
-
-class IncomeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Income
-        fields = "__all__"
+from .models import Invoice, Expense, Payment, Budget
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invoice
+        fields = "__all__"
+
+
+class ExpenseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Expense
         fields = "__all__"
 
 

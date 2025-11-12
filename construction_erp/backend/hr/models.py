@@ -1,5 +1,7 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
+from accounts.models import CustomUser
 
 class Department(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -18,15 +20,24 @@ class Role(models.Model):
 
 
 class Employee(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="employee_profile")
-    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
-    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True)
-    hire_date = models.DateField()
-    salary = models.DecimalField(max_digits=12, decimal_places=2)
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="employee_profile", null=True, blank=True)
+    first_name = models.CharField(max_length=100, default='Employee')
+    last_name = models.CharField(max_length=100, default='User')
+    email = models.EmailField(unique=True, default='temp@example.com')
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    position = models.CharField(max_length=100, blank=True, null=True)
+    department = models.CharField(max_length=100, blank=True, null=True)
+    hire_date = models.DateField(blank=True, null=True)
+    salary = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.user.get_full_name() or self.user.username
+        return f"{self.first_name} {self.last_name}"
+
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
 
 
 class Attendance(models.Model):
@@ -34,28 +45,24 @@ class Attendance(models.Model):
         ('present', 'Present'),
         ('absent', 'Absent'),
         ('late', 'Late'),
-        ('half_day', 'Half Day'),
+        ('half-day', 'Half Day'),
     ]
     
-    employee = models.ForeignKey(
-        Employee, 
-        on_delete=models.CASCADE, 
-        related_name='attendance_records',
-        null=True,
-        blank=True
-    )
-    date = models.DateField()
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='attendance_records', blank=True, null=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='attendance', blank=True, null=True)
+    date = models.DateField(default=timezone.now)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='present')
-    check_in = models.DateTimeField(null=True, blank=True)
-    check_out = models.DateTimeField(null=True, blank=True)
+    check_in = models.DateTimeField(blank=True, null=True)
+    check_out = models.DateTimeField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-date']
 
     def __str__(self):
-        employee_name = self.employee.get_full_name() if self.employee else "No Employee"
-        return f"{employee_name} - {self.date} ({self.status})"
+        return f"{self.employee or self.user} - {self.date} ({self.status})"
 
 
 class Payroll(models.Model):

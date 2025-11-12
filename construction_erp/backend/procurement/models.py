@@ -1,13 +1,17 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 
 
 class Supplier(models.Model):
     name = models.CharField(max_length=200)
-    contact_person = models.CharField(max_length=150, blank=True, null=True)
-    phone = models.CharField(max_length=50, blank=True, null=True)
+    contact_person = models.CharField(max_length=100, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
@@ -31,19 +35,30 @@ class PurchaseRequest(models.Model):
 
 class PurchaseOrder(models.Model):
     STATUS_CHOICES = [
-        ("draft", "Draft"),
-        ("sent", "Sent to Supplier"),
-        ("received", "Received"),
-        ("cancelled", "Cancelled"),
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
     ]
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name="purchase_orders")
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="purchase_orders")
-    order_date = models.DateField(auto_now_add=True)
-    expected_delivery = models.DateField(blank=True, null=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
+    
+    title = models.CharField(max_length=200, default='Purchase Order')
+    description = models.TextField(blank=True, null=True)
+    supplier = models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True, blank=True, related_name='purchase_orders')
+    order_date = models.DateField(default=timezone.now)
+    delivery_date = models.DateField(blank=True, null=True)
+    quantity = models.PositiveIntegerField(default=1)
+    unit_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"PO-{self.id} to {self.supplier.name}"
+        return f"{self.title} - {self.supplier.name if self.supplier else 'No Supplier'}"
+
+    @property
+    def total_amount(self):
+        return self.quantity * self.unit_price
 
 
 class PurchaseOrderItem(models.Model):

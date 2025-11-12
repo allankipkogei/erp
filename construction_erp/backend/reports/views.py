@@ -1,4 +1,5 @@
 from rest_framework import viewsets, permissions, status
+from rest_framework import serializers
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -13,6 +14,19 @@ class ReportViewSet(viewsets.ModelViewSet):
     queryset = Report.objects.all()
     serializer_class = ReportSerializer
     permission_classes = [AllowAny]
+    
+    def create(self, request, *args, **kwargs):
+        """Override create to add better error handling"""
+        print(f"Report create data: {request.data}")
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except serializers.ValidationError as e:
+            print(f"Validation error: {e.detail}")
+            return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['post'])
     def generate(self, request, pk=None):

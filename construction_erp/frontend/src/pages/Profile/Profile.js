@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Button } from "../../components/ui/button";
-import { User, Mail, Briefcase, Shield, Edit2, Save, X, AlertCircle, CheckCircle, RefreshCw } from "lucide-react";
+import { User, Mail, Shield, Edit2, Save, X, AlertCircle, CheckCircle, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -22,7 +22,7 @@ export default function Profile() {
     role: ""
   });
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -56,11 +56,11 @@ export default function Profile() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
   useEffect(() => {
     loadProfile();
-  }, []);
+  }, [loadProfile]);
 
   const handleChange = (e) => {
     setFormData({

@@ -24,12 +24,19 @@ api.interceptors.request.use(
   }
 );
 
-// Handle token expiration
+// Handle token expiration and errors
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
+    // Handle 404 errors
+    if (error.response?.status === 404) {
+      console.error("API endpoint not found:", originalRequest.url);
+      return Promise.reject(new Error("Resource not found. Please check the API endpoint."));
+    }
+
+    // Handle 401 errors (token expiration)
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
@@ -59,43 +66,64 @@ api.interceptors.response.use(
 );
 
 // Auth API
-export const register = async (email, password, role = "worker") => {
-  const response = await axios.post(`${API_URL}/accounts/register/`, {
-    email,
-    password,
-    role,
-  });
-  return response.data;
+export const register = async (email, password, role = "worker", first_name = "", last_name = "") => {
+  try {
+    const response = await axios.post(`${API_URL}/accounts/register/`, {
+      email,
+      password,
+      role,
+      first_name,
+      last_name
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Registration error:", error);
+    throw error;
+  }
 };
 
 export const login = async (email, password) => {
-  const response = await axios.post(`${API_URL}/accounts/token/`, {
-    email,
-    password,
-  });
-  
-  if (response.data.access) {
-    localStorage.setItem("access_token", response.data.access);
+  try {
+    const response = await axios.post(`${API_URL}/accounts/token/`, {
+      email,
+      password,
+    });
+    
+    if (response.data.access) {
+      localStorage.setItem("access_token", response.data.access);
+    }
+    if (response.data.refresh) {
+      localStorage.setItem("refresh_token", response.data.refresh);
+    }
+    
+    return response.data;
+  } catch (error) {
+    console.error("Login error:", error);
+    throw error;
   }
-  if (response.data.refresh) {
-    localStorage.setItem("refresh_token", response.data.refresh);
-  }
-  
-  return response.data;
 };
 
-// Projects API - COMPLETELY REWRITTEN
+// Projects API
 export const fetchProjects = async () => {
-  const response = await api.get("/projects/");
-  // response.data from axios is already the data
-  // DRF pagination returns { count, next, previous, results }
-  return response.data;
+  try {
+    const response = await api.get("/projects/");
+    return response.data;
+  } catch (error) {
+    console.error("fetchProjects error:", error);
+    // Return empty results on error
+    return { results: [], count: 0 };
+  }
 };
 
 // User API
 export const fetchCurrentUser = async () => {
-  const response = await api.get("/accounts/users/me/");
-  return response.data;
+  try {
+    const response = await api.get("/accounts/users/me/");
+    return response.data;
+  } catch (error) {
+    console.error("fetchCurrentUser error:", error);
+    throw error;
+  }
 };
 
 export default api;

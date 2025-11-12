@@ -1,13 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "../../components/ui/button";
-import { Mail, Lock, User, AlertCircle, CheckCircle } from "lucide-react";
+import { Mail, Lock, User, AlertCircle, CheckCircle, RefreshCw } from "lucide-react";
 import axios from "axios";
 
 const API_URL = "http://localhost:8000/api";
 
 export default function Register() {
   const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -32,7 +34,7 @@ export default function Register() {
     setLoading(true);
 
     // Validation
-    if (!formData.email || !formData.password || !formData.confirmPassword) {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.confirmPassword) {
       setError("All fields are required");
       setLoading(false);
       return;
@@ -54,11 +56,14 @@ export default function Register() {
       const response = await axios.post(`${API_URL}/accounts/register/`, {
         email: formData.email,
         password: formData.password,
-        role: formData.role
+        role: formData.role,
+        first_name: formData.firstName,
+        last_name: formData.lastName
       });
 
       console.log("Registration successful:", response.data);
       setSuccess(true);
+      setError("");
 
       // Redirect to login after 2 seconds
       setTimeout(() => {
@@ -78,6 +83,8 @@ export default function Register() {
         } else {
           setError("Registration failed. Please try again.");
         }
+      } else if (err.message === "Network Error") {
+        setError("Cannot connect to server. Please make sure the backend is running on http://localhost:8000");
       } else {
         setError("Network error. Please check your connection.");
       }
@@ -87,18 +94,20 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
+        <div className="bg-white rounded-3xl shadow-2xl p-8">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
-            <p className="text-gray-600">Join Construction ERP today</p>
+            <h1 className="text-4xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+              Create Account
+            </h1>
+            <p className="text-gray-600 text-lg">Join Construction ERP today</p>
           </div>
 
           {/* Success Alert */}
           {success && (
-            <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
+            <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 rounded-xl shadow-md">
               <div className="flex items-center gap-3">
                 <CheckCircle className="text-green-500" size={24} />
                 <div>
@@ -111,7 +120,7 @@ export default function Register() {
 
           {/* Error Alert */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+            <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-500 rounded-xl shadow-md">
               <div className="flex items-center gap-3">
                 <AlertCircle className="text-red-500" size={24} />
                 <p className="text-red-700 font-medium">{error}</p>
@@ -120,7 +129,45 @@ export default function Register() {
           )}
 
           {/* Registration Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* First Name Field */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                First Name
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <input
+                  type="text"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  placeholder="John"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                  disabled={loading || success}
+                />
+              </div>
+            </div>
+
+            {/* Last Name Field */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Last Name
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <input
+                  type="text"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  placeholder="Doe"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                  disabled={loading || success}
+                />
+              </div>
+            </div>
+
             {/* Email Field */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -134,7 +181,7 @@ export default function Register() {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="you@example.com"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                   disabled={loading || success}
                 />
               </div>
@@ -151,7 +198,7 @@ export default function Register() {
                   name="role"
                   value={formData.role}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none bg-white"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none bg-white"
                   disabled={loading || success}
                 >
                   <option value="worker">Worker</option>
@@ -174,7 +221,7 @@ export default function Register() {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                   disabled={loading || success}
                 />
               </div>
@@ -194,7 +241,7 @@ export default function Register() {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                   disabled={loading || success}
                 />
               </div>
@@ -203,10 +250,22 @@ export default function Register() {
             {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold shadow-lg transition-all duration-300 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 rounded-xl font-bold text-lg shadow-xl transition-all duration-300 hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1"
               disabled={loading || success}
             >
-              {loading ? "Creating Account..." : success ? "Success!" : "Create Account"}
+              {loading ? (
+                <>
+                  <RefreshCw className="mr-2 animate-spin" size={20} />
+                  Creating Account...
+                </>
+              ) : success ? (
+                <>
+                  <CheckCircle className="mr-2" size={20} />
+                  Success!
+                </>
+              ) : (
+                "Create Account"
+              )}
             </Button>
           </form>
 
@@ -214,7 +273,7 @@ export default function Register() {
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               Already have an account?{" "}
-              <Link to="/login" className="text-blue-600 hover:text-blue-700 font-semibold">
+              <Link to="/login" className="text-blue-600 hover:text-blue-700 font-bold">
                 Sign in
               </Link>
             </p>

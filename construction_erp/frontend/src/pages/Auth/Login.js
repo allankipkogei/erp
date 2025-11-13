@@ -15,31 +15,27 @@ export default function Login() {
     setError("");
   };
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
-
-    if (!formData.email || !formData.password) {
-      setError("Email and password are required");
-      setLoading(false);
-      return;
-    }
+    setError("");
 
     try {
-      const data = await login(formData.email, formData.password);
+      const response = await login(formData.email, formData.password);
       
-      console.log("Login successful:", data);
-
-      // Redirect based on user role
-      const role = data.user?.role || "worker";
-      if (role === "admin") {
-        navigate("/admin-dashboard");
+      // Store tokens and user info
+      localStorage.setItem("access_token", response.access);
+      localStorage.setItem("refresh_token", response.refresh);
+      localStorage.setItem("user", JSON.stringify(response.user));
+      
+      // Navigate based on role
+      if (response.user?.role === "admin") {
+        navigate("/admin", { replace: true });
       } else {
-        navigate("/worker-dashboard");
+        navigate("/worker", { replace: true });
       }
     } catch (err) {
-      console.error("Login error:", err);
+      console.error("Login failed:", err);
       setError(err.response?.data?.detail || "Invalid email or password");
     } finally {
       setLoading(false);
@@ -123,7 +119,7 @@ export default function Login() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">
                 Email Address

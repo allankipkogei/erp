@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "../../components/ui/button";
-import { ClipboardList, Calendar, Wrench, AlertCircle, RefreshCw, CheckCircle, TrendingUp, User, LogOut } from "lucide-react";
+import { ClipboardList, Calendar, Wrench, AlertCircle, RefreshCw, CheckCircle, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import Navbar from "../../components/Navigation/Navbar";
@@ -19,6 +19,9 @@ export default function WorkerDashboard() {
   const loadStats = async () => {
     setLoading(true);
     setError(null);
+    
+    console.log("🔄 Worker Dashboard: Loading stats..."); // DEBUG
+    
     try {
       // Fetch real data from backend
       const [tasksRes, equipmentRes] = await Promise.allSettled([
@@ -26,16 +29,23 @@ export default function WorkerDashboard() {
         api.get("/equipment/")
       ]);
 
+      console.log("📊 Tasks Response:", tasksRes); // DEBUG
+      console.log("🔧 Equipment Response:", equipmentRes); // DEBUG
+
       const tasks = tasksRes.status === 'fulfilled' ? (tasksRes.value.data.results || tasksRes.value.data || []) : [];
       const equipment = equipmentRes.status === 'fulfilled' ? (equipmentRes.value.data.results || equipmentRes.value.data || []) : [];
 
-      setStats({
+      const newStats = {
         assignedTasks: Array.isArray(tasks) ? tasks.length : 0,
         completedTasks: Array.isArray(tasks) ? tasks.filter(t => t.status === 'completed').length : 0,
         pendingTasks: Array.isArray(tasks) ? tasks.filter(t => t.status === 'pending').length : 0,
         equipment: Array.isArray(equipment) ? equipment.length : 0
-      });
+      };
+
+      console.log("✅ Worker Stats Loaded:", newStats); // DEBUG
+      setStats(newStats);
     } catch (err) {
+      console.error("❌ Worker Dashboard Error:", err); // DEBUG
       setError("Failed to load dashboard data. Please try again.");
     } finally {
       setLoading(false);
@@ -43,33 +53,32 @@ export default function WorkerDashboard() {
   };
 
   useEffect(() => {
+    console.log("🚀 Worker Dashboard Mounted"); // DEBUG
     loadStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleLogout = () => {
-    if (window.confirm("Are you sure you want to logout?")) {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-      navigate("/login");
-    }
-  };
+  console.log("🎨 Worker Dashboard Render - Loading:", loading, "Stats:", stats); // DEBUG
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
-        <div className="relative">
-          <div className="w-20 h-20 border-4 border-green-200 border-t-green-600 rounded-full animate-spin"></div>
-          <RefreshCw className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-green-600" size={32} />
+      <>
+        <Navbar />
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 pt-20">
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-green-200 border-t-green-600 rounded-full animate-spin"></div>
+            <RefreshCw className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-green-600" size={32} />
+          </div>
+          <p className="mt-6 text-xl text-gray-700 font-semibold">Loading worker dashboard...</p>
         </div>
-        <p className="mt-6 text-xl text-gray-700 font-semibold">Loading dashboard...</p>
-      </div>
+      </>
     );
   }
 
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 pt-20">
         <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-10">
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
@@ -79,26 +88,8 @@ export default function WorkerDashboard() {
               </h1>
               <p className="text-gray-600 flex items-center gap-2 text-lg">
                 <TrendingUp size={20} className="text-green-500" />
-                <span className="font-medium">Construction Enterprise Resource Planning System</span>
+                <span className="font-medium">Welcome to Construction ERP</span>
               </p>
-            </div>
-
-            {/* Header Actions */}
-            <div className="flex gap-3">
-              <Button 
-                className="flex items-center gap-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-6 py-3 rounded-xl shadow-lg transition-all duration-300"
-                onClick={() => navigate("/profile")}
-              >
-                <User size={20} />
-                Profile
-              </Button>
-              <Button 
-                className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white px-6 py-3 rounded-xl shadow-lg transition-all duration-300"
-                onClick={handleLogout}
-              >
-                <LogOut size={20} />
-                Logout
-              </Button>
             </div>
           </div>
 

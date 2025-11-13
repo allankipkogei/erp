@@ -5,6 +5,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 
+// Protected Route Components
+import { AdminRoute, WorkerRoute, AuthenticatedRoute } from "./components/ProtectedRoute";
+
 // Dashboard Pages
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import WorkerDashboard from "./pages/Worker/WorkerDashboard";
@@ -72,64 +75,69 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Auth Routes */}
+        {/* Public Routes - No Authentication Required */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Dashboard Routes - ADD THESE ALIASES */}
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin-dashboard" element={<AdminDashboard />} />
-        <Route path="/worker" element={<WorkerDashboard />} />
-        <Route path="/worker-dashboard" element={<WorkerDashboard />} />
+        {/* Admin-Only Routes */}
+        <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+        <Route path="/admin-dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
-        {/* Project Routes */}
-        <Route path="/projects" element={<Projects />} />
-        <Route path="/projects/create" element={<ProjectCreate />} />
-        <Route path="/projects/:id" element={<ProjectDetail />} />
-        <Route path="/projects/:id/edit" element={<ProjectEdit />} />
+        {/* Worker-Only Routes */}
+        <Route path="/worker" element={<WorkerRoute><WorkerDashboard /></WorkerRoute>} />
+        <Route path="/worker-dashboard" element={<WorkerRoute><WorkerDashboard /></WorkerRoute>} />
 
-        {/* HR Routes */}
-        <Route path="/employees" element={<Employees />} />
-        <Route path="/employees/create" element={<EmployeeCreate />} />
-        <Route path="/employees/:id/edit" element={<EmployeeEdit />} />
+        {/* Authenticated Routes - Both Admin & Worker Can Access */}
+        <Route path="/projects" element={<AuthenticatedRoute><Projects /></AuthenticatedRoute>} />
+        <Route path="/projects/create" element={<AdminRoute><ProjectCreate /></AdminRoute>} />
+        <Route path="/projects/:id" element={<AuthenticatedRoute><ProjectDetail /></AuthenticatedRoute>} />
+        <Route path="/projects/:id/edit" element={<AdminRoute><ProjectEdit /></AdminRoute>} />
 
-        {/* Equipment Routes */}
-        <Route path="/equipment" element={<Equipment />} />
-        <Route path="/equipment/create" element={<EquipmentCreate />} />
+        {/* HR Routes - Admin Only */}
+        <Route path="/employees" element={<AdminRoute><Employees /></AdminRoute>} />
+        <Route path="/employees/create" element={<AdminRoute><EmployeeCreate /></AdminRoute>} />
+        <Route path="/employees/:id/edit" element={<AdminRoute><EmployeeEdit /></AdminRoute>} />
 
-        {/* Task Routes */}
-        <Route path="/tasks" element={<Tasks />} />
-        <Route path="/tasks/create" element={<TaskCreate />} />
+        {/* Equipment Routes - Both Can View, Admin Can Create */}
+        <Route path="/equipment" element={<AuthenticatedRoute><Equipment /></AuthenticatedRoute>} />
+        <Route path="/equipment/create" element={<AdminRoute><EquipmentCreate /></AdminRoute>} />
 
-        {/* Site Routes */}
-        <Route path="/sites" element={<Sites />} />
-        <Route path="/sites/create" element={<SiteCreate />} />
-        <Route path="/daily-log" element={<DailyLog />} />
-        <Route path="/daily-log/create" element={<DailyLogCreate />} />
-        <Route path="/safety-record" element={<SafetyRecord />} />
-        <Route path="/safety-record/create" element={<SafetyRecordCreate />} />
-        <Route path="/site-inspection" element={<SiteInspection />} />
+        {/* Task Routes - Authenticated */}
+        <Route path="/tasks" element={<AuthenticatedRoute><Tasks /></AuthenticatedRoute>} />
+        <Route path="/tasks/create" element={<AdminRoute><TaskCreate /></AdminRoute>} />
 
-        {/* Inventory Route */}
-        <Route path="/inventory" element={<Inventory />} />
+        {/* Site Routes - Authenticated */}
+        <Route path="/sites" element={<AuthenticatedRoute><Sites /></AuthenticatedRoute>} />
+        <Route path="/sites/create" element={<AdminRoute><SiteCreate /></AdminRoute>} />
+        <Route path="/daily-log" element={<AuthenticatedRoute><DailyLog /></AuthenticatedRoute>} />
+        <Route path="/daily-log/create" element={<AuthenticatedRoute><DailyLogCreate /></AuthenticatedRoute>} />
+        <Route path="/safety-record" element={<AuthenticatedRoute><SafetyRecord /></AuthenticatedRoute>} />
+        <Route path="/safety-record/create" element={<AuthenticatedRoute><SafetyRecordCreate /></AuthenticatedRoute>} />
+        <Route path="/site-inspection" element={<AuthenticatedRoute><SiteInspection /></AuthenticatedRoute>} />
 
-        {/* Finance Route */}
-        <Route path="/finance" element={<Finance />} />
+        {/* Inventory Routes - Admin Only */}
+        <Route path="/inventory" element={<AdminRoute><Inventory /></AdminRoute>} />
 
-        {/* Procurement Route */}
-        <Route path="/purchase-request" element={<PurchaseRequest />} />
+        {/* Finance Routes - Admin Only */}
+        <Route path="/finance" element={<AdminRoute><Finance /></AdminRoute>} />
 
-        {/* Reports Route */}
-        <Route path="/reports" element={<Reports />} />
+        {/* Procurement Routes - Admin Only */}
+        <Route path="/purchase-request" element={<AdminRoute><PurchaseRequest /></AdminRoute>} />
 
-        {/* Attendance Route */}
-        <Route path="/attendance" element={<Attendance />} />
+        {/* Reports Routes - Admin Only */}
+        <Route path="/reports" element={<AdminRoute><Reports /></AdminRoute>} />
 
-        {/* Profile Route */}
-        <Route path="/profile" element={<Profile />} />
+        {/* Attendance Routes - Authenticated */}
+        <Route path="/attendance" element={<AuthenticatedRoute><Attendance /></AuthenticatedRoute>} />
+
+        {/* Profile Route - Authenticated */}
+        <Route path="/profile" element={<AuthenticatedRoute><Profile /></AuthenticatedRoute>} />
 
         {/* Default Route */}
         <Route path="/" element={<Navigate to="/login" replace />} />
+        
+        {/* 404 Route */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );

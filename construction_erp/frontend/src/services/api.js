@@ -23,43 +23,42 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Handle 401 errors (token expired)
+// Add response interceptor to handle 401 errors
 api.interceptors.response.use(
-  (res) => res,
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
-    // If 401 and we haven't retried yet, try to refresh token
+
+    // If error is 401 and we haven't retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
-      const refreshToken = localStorage.getItem("refresh_token");
-      if (refreshToken) {
-        try {
+
+      try {
+        // Try to refresh token
+        const refreshToken = localStorage.getItem("refresh_token");
+
+        if (refreshToken) {
           const response = await axios.post(`${API_URL}/token/refresh/`, {
-            refresh: refreshToken
+            refresh: refreshToken,
           });
-          
-          const newAccessToken = response.data.access;
-          localStorage.setItem("access_token", newAccessToken);
-          
+
+          const { access } = response.data;
+          localStorage.setItem("access_token", access);
+
           // Retry original request with new token
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          originalRequest.headers.Authorization = `Bearer ${access}`;
           return api(originalRequest);
-        } catch (refreshError) {
-          // Refresh failed, logout user
-          localStorage.removeItem("access_token");
-          localStorage.removeItem("refresh_token");
-          window.location.href = "/login";
-          return Promise.reject(refreshError);
         }
-      } else {
-        // No refresh token, logout
+      } catch (refreshError) {
+        // Refresh failed, logout user
         localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user");
         window.location.href = "/login";
+        return Promise.reject(refreshError);
       }
     }
-    
+
     // Normalize error response
     const normalized = {
       message: error.response?.data?.detail || error.message,

@@ -35,7 +35,7 @@ export default function Navbar() {
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       localStorage.removeItem("user");
-      navigate("/login");
+      navigate("/login", { replace: true });
     }
   };
 
